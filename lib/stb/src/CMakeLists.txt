@@ -4,4 +4,4 @@ include_directories(
 
 aux_source_directory(. SRC_STB)
 add_library(stb ${SRC_STB})
-#set_target_properties(stb PROPERTIES OUTPUT_NAME "stb")
+set_target_properties(stb PROPERTIES LINKER_LANGUAGE C)

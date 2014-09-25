@@ -1,6 +1,6 @@
 message(STATUS "Begin to build GLFW...")
 
-set(GLFW_SOURCE_DIR ${CharmingTremblePlus_SOURCE_DIR}/lib/glfw/)
+set(GLFW_SOURCE_DIR ${CharmingTremblePlus_SOURCE_DIR}/lib/glfw)
 set(GLFW_BINARY_DIR ${CharmingTremblePlus_BINARY_DIR}/glfw)
 set(GLFW_VERSION_MAJOR "3")
 set(GLFW_VERSION_MINOR "0")
@@ -388,8 +388,8 @@ endif()
 #--------------------------------------------------------------------
 # Create generated files
 #--------------------------------------------------------------------
-configure_file(${GLFW_SOURCE_DIR}/docs/Doxyfile.in
-               ${GLFW_BINARY_DIR}/docs/Doxyfile @ONLY)
+#configure_file(${GLFW_SOURCE_DIR}/docs/Doxyfile.in
+#               ${GLFW_BINARY_DIR}/docs/Doxyfile @ONLY)
 
 configure_file(${GLFW_SOURCE_DIR}/src/glfw_config.h.in 
                ${GLFW_BINARY_DIR}/src/glfw_config.h @ONLY)

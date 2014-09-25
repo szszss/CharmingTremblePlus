@@ -49,6 +49,7 @@ endif()
 
 add_library(glfw ${glfw_SOURCES} ${glfw_HEADERS})
 set_target_properties(glfw PROPERTIES OUTPUT_NAME "${GLFW_LIB_NAME}")
+set_target_properties(glfw PROPERTIES LINKER_LANGUAGE C)
 
 if (GLFW_BUILD_SHARED_LIBS)
     # Include version information in the output
