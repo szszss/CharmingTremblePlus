@@ -1,8 +1,10 @@
 project "Game"
+language "C++"
 configuration "Release"
 	kind "WindowedApp"
 configuration "Debug"
 	kind "ConsoleApp"
+configuration {}
 targetdir "../bin"
 links {"GLFW","STB"}
 includedirs {
@@ -14,4 +16,8 @@ files {
 	"*.cpp",
 	"*.h",
 	"*.hpp"
+}
+vpaths {
+   ["Headers"] = {"**.h", "**.hpp"},
+   ["Sources"] = {"**.c", "**.cpp"}
 }

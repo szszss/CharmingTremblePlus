@@ -6,17 +6,18 @@
 #include "math.h"
 #include "gui.h"
 #include "collection.h"
-#include "ft2build.h"
-#include FT_FREETYPE_H
-#include FT_BITMAP_H
+//#include "ft2build.h"
+//#include FT_FREETYPE_H
+//#include FT_BITMAP_H
 
 #ifdef OS_WINDOWS //其实用WIN32也行...
 #pragma comment( lib, "opengl32.lib")
 #pragma comment( lib, "glu32.lib")
 #endif
 
-#include "SDL.h"
-#include "SDL_opengl.h"
+#include "GLFW\glfw3.h"
+//#include "SDL.h"
+//#include "SDL_opengl.h"
 
 #ifdef OS_MAC
 #include <OpenGL/glu.h> 
@@ -38,10 +39,10 @@ int RE_DestroyTextTexture(void *texture);
 TextTexture* RE_ProcessTextTexture(char* utf8Text,float maxWidth);
 void RE_UpdateTextTextureCache();
 
-SDL_Window* window = NULL;
-static SDL_GLContext glContext = NULL;
-static FT_Library library = NULL;
-static FT_Face face = NULL;
+GLFWwindow* window = NULL;
+//static SDL_GLContext glContext = NULL;
+//static FT_Library library = NULL;
+//static FT_Face face = NULL;
 static LinkedList *textTextureCache = NULL;
 static GLdouble aspect;
 static GLuint quicklyRenderList[20]={0};
@@ -54,7 +55,7 @@ extern unsigned long long tickTime;
 int RE_InitWindow(int width,int height)
 {
 	int result;
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+	/*SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE,8);
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,8);
@@ -62,15 +63,17 @@ int RE_InitWindow(int width,int height)
 	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE,8);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,24); //深度缓冲如果过大会有奇妙的效果,我想也许是因为超过硬件支持的范围后,OpenGL只能采用软件模拟了
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,1);
-	window = SDL_CreateWindow(WINDOW_TITLE,SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,width,height,SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+	window = SDL_CreateWindow(WINDOW_TITLE,SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,width,height,SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);*/
+	window = glfwCreateWindow(width, height, WINDOW_TITLE, NULL, NULL);
 	if(window==NULL)
 		GameCrash("Initialized window failed.");
 	LoggerInfo("Window initialized");
-	glContext = SDL_GL_CreateContext(window);
-	if(glContext==NULL)
+	//glContext = SDL_GL_CreateContext(window);
+	glfwMakeContextCurrent(window);
+	/*if(glContext==NULL)
 	{
 		GameCrash("Initialized opengl(2.1) failed.");
-	}
+	}*/
 	LoggerInfo("OpenGL(2.1) initialized");
 	SDL_GL_SetSwapInterval(1);
 	RE_Reshape(width,height);
@@ -99,20 +102,20 @@ void RE_Reshape(int width,int height)
 
 void RE_DestroyWindow()
 {
-	if(glContext!=NULL)
+	/*if(glContext!=NULL)
 		SDL_GL_DeleteContext(glContext);
 	if(window!=NULL)
-		SDL_DestroyWindow(window);
+		SDL_DestroyWindow(window);*/
 	if(quicklyRenderList[0]!=0)
 	{
 		RE_DestroyQuicklyRender();
 		LoggerInfo("OpenGL quickly renderer destroyed");
 	}
-	if(library!=NULL)
+	/*if(library!=NULL)
 	{
 		RE_DestroyFontRenderer();
 		LoggerInfo("Font renderer destroyed");
-	}
+	}*/
 }
 
 int RE_BindTexture(Texture* texture)

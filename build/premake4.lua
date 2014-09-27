@@ -5,7 +5,8 @@ configuration "Release"
 	flags { "Optimize", "EnableSSE", "StaticRuntime", "NoMinimalRebuild", "FloatFast"}
 configuration "Debug"
 	flags { "Symbols", "StaticRuntime" , "NoMinimalRebuild", "NoEditAndContinue" ,"FloatFast"}
-		
+configuration{}
+
 if os.is("Linux") then
     if os.is64bit() then
         platforms {"x64"}
@@ -52,6 +53,8 @@ language "C++"
 	
 location("./" .. act)
 
+--dofile("premakeHack.lua")
+
+include "../src/"
 include "../lib/glfw/"
 include "../lib/stb/"
-include "../src/"
