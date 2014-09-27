@@ -54,7 +54,13 @@ language "C++"
 location("./" .. act)
 
 --dofile("premakeHack.lua")
+tbox_float    = true
+tbox_platform = true
+tbox_asio     = true
+tbox_xml      = true
+tbox_charset  = true
 
 include "../src/"
 include "../lib/glfw/"
 include "../lib/stb/"
+include "../lib/tbox/"

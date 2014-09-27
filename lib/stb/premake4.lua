@@ -1,7 +1,8 @@
 project "STB"
 language "C"
 kind "StaticLib"
-targetdir "../bin/output"
+targetdir "../../bin/obj"
+objdir "../../bin/obj"
 includedirs {
 }
 files {
