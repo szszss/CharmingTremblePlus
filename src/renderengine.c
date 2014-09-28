@@ -37,7 +37,6 @@ void RE_RenderCubeDoCentre(float lx,float ly,float lz,float rx,float ry,float rz
 void RE_RenderCubeDoRight(float lx,float ly,float lz,float rx,float ry,float rz);
 void RE_DestroyQuicklyRender();
 void RE_DestroyFontRenderer();
-int RE_DestroyTextTexture(void *texture);
 TextTexture* RE_ProcessTextTexture(char* utf8Text,float maxWidth);
 void RE_UpdateTextTextureCache();
 
@@ -441,7 +440,7 @@ int RE_InitFontRenderer(int width,int height)
 		return -1;
 	}
 
-	fontData = stb_file(font, &length);
+	fontData = (byte*)stb_file(font, &length);
 	if (fontData == NULL)
 	{
 		LoggerFatal("Can't open font file %s", font);
@@ -455,19 +454,18 @@ int RE_InitFontRenderer(int width,int height)
 		return -1;
 	}
 	free_s(font);
-	stbtt_MakeCodepointBitmap()
-	result = FT_Set_Char_Size(face,4<<6,0,300,300);
-	if(result)
-		return result;
-	result = FT_Select_Charmap(face,FT_ENCODING_UNICODE);
-	if(result)
-		return result;
-	textTextureCache = LinkedListCreate();
-	//SDL_Delay(3000);
+	//result = FT_Set_Char_Size(face,4<<6,0,300,300);
+	//if(result)
+	//	return result;
+	//result = FT_Select_Charmap(face,FT_ENCODING_UNICODE);
+	//if(result)
+	//	return result;
+	//textTextureCache = LinkedListCreate();
 	return 0;
 }
 
-int RE_DestroyTextTexture(void *texture)
+//旧的销毁缓存的函数,已经不用啦
+/*int RE_DestroyTextTexture(void *texture)
 {
 	TextTexture *textTexture=(TextTexture*)texture;
 	if(!textTexture->isStatic)
@@ -477,17 +475,19 @@ int RE_DestroyTextTexture(void *texture)
 	RE_UnloadTexture(textTexture->texture.id);
 	free_s(textTexture);
 	return 0;
-}
+}*/
 
 void RE_DestroyFontRenderer()
 {
-	if(face!=NULL)
+	if(fontData!=NULL)
+		free_s(fontData);
+	/*if(face!=NULL)
 		FT_Done_Face(face);
 	FT_Done_FreeType(library);
 	if(textTextureCache!=NULL)
 	{
 		LinkedListDestory(textTextureCache,RE_DestroyTextTexture);
-	}
+	}*/
 }
 
 void RE_DrawTextStatic( char* text,float x,float y,float width )
