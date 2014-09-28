@@ -5,8 +5,12 @@ targetdir "../../bin/obj"
 objdir "../../bin/obj"
 includedirs {
 }
+defines {
+	"GLFW_BUILD_SHARED_LIBS 0",
+	"_GLFW_BUILD_DLL 0",
+	"_GLFW_USE_OPENGL"
+}
 files {
-	"src/glfw_config.h",
 	"src/internal.h",
 	"include/GLFW/glfw3.h",
 	"include/GLFW/glfw3native.h",
@@ -33,6 +37,10 @@ configuration {"windows"}
 		"src/wgl_platform.h",
 		"src/wgl_context.c"
 	}
+	defines {
+		"_GLFW_WIN32",
+		"_GLFW_WGL"
+	}
 configuration {"linux"}
 	files {
 		"src/x11_platform.h",
@@ -46,18 +54,26 @@ configuration {"linux"}
 		"src/glx_platform.h",
 		"src/glx_context.c"
 	}
+	defines {
+		"_GLFW_X11",
+		"_GLFW_GLX"
+	}
 configuration {"macosx"}
 	files {
 		"src/cocoa_platform.h",
-		"src/cocoa_clipboard.c",
+		"src/cocoa_clipboard.m",
 		"src/cocoa_gamma.c",
-		"src/cocoa_init.c",
-		"src/cocoa_joystick.c",
-		"src/cocoa_monitor.c",
+		"src/cocoa_init.m",
+		"src/cocoa_joystick.m",
+		"src/cocoa_monitor.m",
 		"src/cocoa_time.c",
-		"src/cocoa_window.c",
-		"src/egl_platform.h",
-		"src/egl_context.c"
+		"src/cocoa_window.m",
+		"src/nsgl_platform.h",
+		"src/nsgl_context.m"
+	}
+	defines {
+		"_GLFW_COCOA",
+		"_GLFW_NSGL"
 	}
 configuration {}
 vpaths {

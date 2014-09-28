@@ -6,6 +6,8 @@
 #include "math.h"
 #include "gui.h"
 #include "collection.h"
+#include "stb/stb.h"
+#include "stb/stb_truetype.h"
 //#include "ft2build.h"
 //#include FT_FREETYPE_H
 //#include FT_BITMAP_H
@@ -43,6 +45,8 @@ GLFWwindow* window = NULL;
 //static SDL_GLContext glContext = NULL;
 //static FT_Library library = NULL;
 //static FT_Face face = NULL;
+static byte *fontData = NULL;
+static stbtt_fontinfo fontInfo;
 static LinkedList *textTextureCache = NULL;
 static GLdouble aspect;
 static GLuint quicklyRenderList[20]={0};
@@ -428,23 +432,30 @@ void RE_RenderCubeQuick( int count )
 
 int RE_InitFontRenderer(int width,int height)
 {
-	int result;
 	char *font;
-		//return 0;
-	result = FT_Init_FreeType(&library);
-	if(result)
-		return result;
+	size_t length;
 	font = OS_GetFontPath(FONT_DEFAULT,FONT_BACKUP);
 	if(font==NULL)
 	{
 		LoggerFatal("Can't find font %s and %s",FONT_DEFAULT,FONT_BACKUP);
 		return -1;
 	}
-	result = FT_New_Face(library,font,0,&face);
+
+	fontData = stb_file(font, &length);
+	if (fontData == NULL)
+	{
+		LoggerFatal("Can't open font file %s", font);
+		free_s(font);
+		return -1;
+	}
+	if (!stbtt_InitFont(&fontInfo, fontData, 0))
+	{
+		LoggerFatal("Failed to init font %s", font);
+		free_s(font);
+		return -1;
+	}
 	free_s(font);
-	if(result)
-		return result;
-	//result = FT_Set_Pixel_Sizes(face,32,0);
+	stbtt_MakeCodepointBitmap()
 	result = FT_Set_Char_Size(face,4<<6,0,300,300);
 	if(result)
 		return result;

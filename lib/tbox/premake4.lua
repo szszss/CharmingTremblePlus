@@ -680,6 +680,7 @@ configuration "windows" --定义windows下的配置
 		"src/tbox/platform/windows/interface/iphlpapi.c"
 	}
 	libdirs {"lib/msvc/x86"}
+	buildoptions {"/TP"}
 	defines {
 		"TB_CONFIG_OS_WINDOWS",
 		"TB_CONFIG_LIBC_HAVE_MEMCPY",

@@ -6,10 +6,11 @@ configuration "Debug"
 	kind "ConsoleApp"
 configuration {}
 targetdir "../bin"
-links {"GLFW","STB"}
+links {"GLFW","STB","TBox"}
 includedirs {
 	"../lib/glfw/include/",
-	"../lib/stb/include/"
+	"../lib/stb/include/",
+	"../lib/tbox/src/"
 }
 files {
 	"*.c",

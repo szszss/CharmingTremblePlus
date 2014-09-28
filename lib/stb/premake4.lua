@@ -4,12 +4,13 @@ kind "StaticLib"
 targetdir "../../bin/obj"
 objdir "../../bin/obj"
 includedirs {
+	"include/"
 }
 files {
 	"src/*.c",
 	"src/*.cpp",
-	"include/STB/*.h",
-	"include/STB/*.hpp"
+	"include/stb/*.h",
+	"include/stb/*.hpp"
 }
 vpaths {
    ["Headers"] = {"**.h", "**.hpp"},
