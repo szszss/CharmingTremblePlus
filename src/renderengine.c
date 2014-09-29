@@ -1,4 +1,5 @@
-﻿#include "renderengine.h"
+﻿#include <string>
+#include "renderengine.h"
 #include "resourcemanager.h"
 #include "game.h"
 #include "memory.h"
@@ -46,7 +47,8 @@ GLFWwindow* window = NULL;
 //static FT_Face face = NULL;
 static byte *fontData = NULL;
 static stbtt_fontinfo fontInfo;
-static LinkedList *textTextureCache = NULL;
+static GLuint charTextures[sizeof(wchar_t) == 2 ? 256 : 4351] = { -1 };
+//static LinkedList *textTextureCache = NULL;
 static GLdouble aspect;
 static GLuint quicklyRenderList[20]={0};
 static int windowWidth;
@@ -54,6 +56,8 @@ static int windowHeight;
 
 extern World* theWorld;
 extern unsigned long long tickTime;
+
+using namespace std;
 
 int RE_InitWindow(int width,int height)
 {
@@ -106,9 +110,9 @@ void RE_Reshape(int width,int height)
 void RE_DestroyWindow()
 {
 	/*if(glContext!=NULL)
-		SDL_GL_DeleteContext(glContext);
+		SDL_GL_DeleteContext(glContext);*/
 	if(window!=NULL)
-		SDL_DestroyWindow(window);*/
+		glfwDestroyWindow(window);
 	if(quicklyRenderList[0]!=0)
 	{
 		RE_DestroyQuicklyRender();
@@ -178,35 +182,24 @@ int RE_Render()
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT ); //清理缓存
 	RE_CheckGLError(RE_STAGE_BEFORE_DRAW_3D);
 	glMatrixMode(GL_PROJECTION); //重设定投影矩阵
-	glLoadIdentity();
 	glFrustum(-0.35,0.65,-aspect/2,aspect/2,1,1024);
 	glMatrixMode( GL_MODELVIEW ); //设定模型视角矩阵
 	glLoadIdentity();
-	glPushMatrix();
 	glEnable(GL_DEPTH_TEST); //不开深度测试的话毁三观啊
 	glEnable(GL_TEXTURE_2D);
-	//glShadeModel(GL_SMOOTH);
-	//glEnable(GL_LINE_SMOOTH);
-	//glEnable(GL_POINT_SMOOTH);
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 	glLightModelfv(GL_LIGHT_MODEL_AMBIENT,amLight);
 	glLightfv(GL_LIGHT0,GL_POSITION,light0Position);
 	glLightfv(GL_LIGHT0,GL_DIFFUSE,light0Diffuse);
-	//glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
-	//glHint(GL_POINT_SMOOTH_HINT,GL_NICEST);
-	//glHint(GL_PERSPECTIVE_CORRECTION_HINT,GL_NICEST);
 	glTranslatef(0.0f, 0.0f, -42);
 	if(theWorld!=NULL)
 	{
 		WorldRender(theWorld);
 	}
 	RE_CheckGLError(RE_STAGE_AFTER_DRAW_3D);
-	glPopMatrix();
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_TEXTURE_2D);
-	glDisable(GL_LINE_SMOOTH);
-	glDisable(GL_POINT_SMOOTH);
 	glDisable(GL_LIGHT0);
 	glDisable(GL_LIGHTING);
 	glFlush();
@@ -214,23 +207,21 @@ int RE_Render()
 	//-------------------绘制2D-------------------
 	RE_CheckGLError(RE_STAGE_BEFORE_DRAW_2D);
 	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(-1.0, 1.0, -1.0, 1.0, 0.5, 10.0);
+	//glLoadIdentity();
+	glOrtho(0, 1.0, -1.0, 0.0, 0.5, 10.0); //将投影矩阵放置在第四象限
+	glTranslatef(0.0f, 0.0f, 1.0f);
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
-	glPushMatrix();
-	glTranslatef(0.0f, 0.0f, -1);
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	Gui_Render(theWorld);
 	RE_CheckGLError(RE_STAGE_AFTER_DRAW_2D);
-	glPopMatrix();
 	glFlush();
 	RE_CheckGLError(RE_STAGE_FLUSH_2D);
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_BLEND);
-	SDL_GL_SwapWindow(window);
+	glfwSwapBuffers(window);
 	RE_CheckGLError(RE_STAGE_FINISH);
 	return 0;
 }
@@ -490,7 +481,39 @@ void RE_DestroyFontRenderer()
 	}*/
 }
 
-void RE_DrawTextStatic( char* text,float x,float y,float width )
+void RE_DrawText(wstring text, float x, float y, float width)
+{
+	x = x*2.0f - 1.0f;
+	y = 1.0f - (y*2.0f);
+	for (auto iter = text.begin(); iter != text.end(); wchar_t c = *iter, iter++)
+	{
+		RE_BindChar(c);
+		v = 1.0f - v;
+		glBegin(GL_QUADS);
+		//glColor3f(1,1,1);
+		glTexCoord2f(u + uw, v - vh); glVertex3f(x + width, y - height, 0);
+		//glColor3f(0,0,1);
+		glTexCoord2f(u + uw, v); glVertex3f(x + width, y, 0);
+		glTexCoord2f(u, v); glVertex3f(x, y, 0);
+		glTexCoord2f(u, v - vh); glVertex3f(x, y - height, 0);
+		glEnd();
+	}
+	GLuint texture = charTextures[text]
+}
+
+void RE_BindChar(wchar_t c)
+{
+	static currentTexture=-1;
+	GLuint texture = charTextures[c >> 8];
+	if (texture == -1)
+	{
+		//烘焙
+	}
+	if ()
+}
+
+//旧的字体渲染函数
+/*void RE_DrawTextStatic( char* text,float x,float y,float width )
 {
 	LinkedListIterator *iterator;
 	TextTexture *texture = NULL;
@@ -549,7 +572,7 @@ void RE_DrawTextVolatile( char* text,float x,float y,float width )
 	}
 	RE_BindTexture(&(texture->texture));
 	RE_DrawRectWithTexture(x,y,texture->texture.width/(float)windowWidth,texture->texture.height/(float)windowHeight,0,0,1,1);
-}
+}*/
 
 TextTexture* RE_ProcessTextTexture( char* utf8Text,float maxWidth )
 {

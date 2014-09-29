@@ -63,5 +63,6 @@ unsigned int RE_ProcessRawTexture(byte* rawData,int color,int format,unsigned lo
 void RE_UnloadTexture(unsigned int texture);
 /*检查OpenGL内部错误,注意只有在Debug模式下才会检查每一个错误,Release模式下只有Rendering阶段才会进行检查.这是因为glGetError的开销很大.*/
 int RE_CheckGLError(char* stage);
-void RE_DrawTextStatic(char* text,float x,float y,float width);
-void RE_DrawTextVolatile(char* text,float x,float y,float width);
+void RE_DrawText(wchar_t* text, float x, float y, float width);
+//void RE_DrawTextStatic(char* text,float x,float y,float width);
+//void RE_DrawTextVolatile(char* text,float x,float y,float width);
