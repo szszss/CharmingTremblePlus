@@ -1,4 +1,4 @@
-﻿#pragma execution_character_set("utf-8")
+﻿//#pragma execution_character_set("utf-8")
 #pragma once
 #define WINDOW_TITLE "Charming Tremble"
 #define WINDOW_WIDTH 800

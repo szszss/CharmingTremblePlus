@@ -2,6 +2,7 @@
 #include "game.h"
 #include "memory.h"
 #include "collection.h"
+#include "SDL_keyboard.h"
 
 /*#define INPUT_BITS_UP     1
 #define INPUT_BITS_DOWN   2
@@ -26,10 +27,10 @@ struct implOSM
 	unsigned long delayTime;
 };
 
-int IN_InitInput(GLFWwindow *window);
+int IN_InitInput();
 void IN_DestroyInput();
-BOOL IN_KeyDown(int keynum);
-BOOL IN_KeyUp(int keynum);
+BOOL IN_KeyDown(SDL_Keycode keynum);
+BOOL IN_KeyUp(SDL_Keycode keynum);
 unsigned char IN_GetOperate();
 void IN_UpdateInput();
 void IN_Clear();
@@ -38,4 +39,4 @@ BOOL IN_TextInputEnable(long x,long y,long w,long h);
 void IN_TextInputDisable();
 void IN_TextInputChar(char *str);
 BOOL IN_TextInputChanged();
-void IN_TextInputGet(char *dest);
+void IN_TextInputGet(void *dest);

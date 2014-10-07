@@ -1,17 +1,17 @@
 ﻿#include "resourcemanager.h"
 #include "collection.h"
 #include "memory.h"
-#include "stbi.h"
-#include "png.h"
-#include "tga.h"
+#include "STB/stb_image.h"
+//#include "png.h"
+//#include "tga.h"
 #include "SDL_opengl.h"
 #include <string.h>
 
 static HashTree *textureHT = NULL;
 
 void RM_DestroyTexture(void* p);
-Texture* RM_LoadPNG(char* imageFile);
-Texture* RM_LoadTGA(char* imageFile);
+//Texture* RM_LoadPNG(char* imageFile);
+//Texture* RM_LoadTGA(char* imageFile);
 void RM_ReverseRawData(unsigned char *rawBytes, unsigned int width, unsigned int height, size_t size);
 
 int RM_InitResourceManager()
@@ -68,7 +68,7 @@ Texture* RM_LoadTexture( char* imageFile )
 {
 	static char suffix[]={0,0,0,0,0};
 	Texture* texture = NULL;
-	int i;
+	/*int i;
 	i=strlen(imageFile);
 	suffix[0]=imageFile[i-4];
 	suffix[1]=imageFile[i-3];
@@ -83,7 +83,7 @@ Texture* RM_LoadTexture( char* imageFile )
 		texture = RM_LoadTGA(imageFile);
 	}
 	else
-	{
+	{*/
 		int width;
 		int height;
 		int comp;
@@ -107,13 +107,13 @@ Texture* RM_LoadTexture( char* imageFile )
 			comp==4?GL_RGBA:GL_RGB,
 			width,height);
 		stbi_image_free(rawBytes);
-	}
+	//}
 	HashTreeAdd(textureHT,imageFile,texture);
 	LoggerInfo("A texture has been loaded : %s",imageFile);
 	return texture;
 }
 
-Texture* RM_LoadPNG( char* imageFile )
+/*Texture* RM_LoadPNG( char* imageFile )
 {
 	Texture* texture = NULL;
 	FILE* file;
@@ -239,4 +239,4 @@ Texture* RM_LoadTGA(char* imageFile)
 	//free_s(tgaData.img_id);
 	free(tgaData.img_data);
 	return texture;
-}
+}*/

@@ -18,7 +18,7 @@ struct implGuiButton
 	int posY;
 	int width;
 	int height;
-	char *text;
+	wchar_t *text;
 	int flags;
 	int (*press)(GuiButton*,GuiScreen*,World*);
 	void (*update)(GuiButton*,GuiScreen*,World*);
@@ -29,7 +29,7 @@ void Gui_Render(World* world);
 void Gui_Destroy();
 void Gui_Open(GuiScreen* (*constructor)());
 void Gui_MouseDown(long x,long y);
-GuiButton* Gui_InitButton(int x, int y,int w,int h,char* text,int flags,int (*press)(GuiButton*,GuiScreen*,World*),void (*update)(GuiButton*,GuiScreen*,World*));
+GuiButton* Gui_InitButton(int x, int y,int w,int h,wchar_t* text,int flags,int (*press)(GuiButton*,GuiScreen*,World*),void (*update)(GuiButton*,GuiScreen*,World*));
 void Gui_AddButton(GuiScreen* screen,GuiButton* button);
 void Gui_RenderButton(GuiButton* button,GuiScreen* screen,World* world);
 BOOL Gui_Close();

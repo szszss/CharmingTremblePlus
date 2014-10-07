@@ -1,19 +1,18 @@
 ﻿#include "input.h"
 #include "gui.h"
-#include "GLFW\glfw3.h"
+#include "tbox/charset/charset.h"
 #include <string.h>
 
 OSM mainOSM;
 static unsigned char operateCodes[256];
 static BOOL inputEnabled = FALSE;
-//static SDL_Rect inputRect;
+static SDL_Rect inputRect;
 static char inputChar[256] = {0};
 static BOOL inputChanged = FALSE;
 
 static BOOL _DummyDelete(void* v){return 0;}
-static void IN_KeyHandler(GLFWwindow *windows, int key, int scancode, int action, int mods);
 
-int IN_InitInput(GLFWwindow *window)
+int IN_InitInput()
 {
 	int i=0;
 	mainOSM.linkedList = LinkedListCreate();
@@ -22,7 +21,6 @@ int IN_InitInput(GLFWwindow *window)
 	{
 		operateCodes[i]=(unsigned char)i;
 	}
-	glfwSetKeyCallback(window, IN_KeyHandler);
 	LoggerInfo("Input processor initialized");
 }
 
@@ -32,36 +30,23 @@ void IN_DestroyInput()
 	LoggerInfo("Input processor closed");
 }
 
-void IN_KeyHandler(GLFWwindow *windows, int key, int scancode, int action, int mods)
-{
-	switch (action)
-	{
-	case GLFW_PRESS:
-		IN_KeyDown(key);
-		break;
-	case GLFW_RELEASE:
-		IN_KeyUp(key);
-		break;
-	}
-}
-
-BOOL IN_KeyDown(int keynum)
+BOOL IN_KeyDown(SDL_Keycode keynum)
 {
 	switch(keynum)
 	{
-	case GLFW_KEY_UP:
+	case SDLK_UP:
 		LinkedListOffer(mainOSM.linkedList,&operateCodes[INPUT_OPERATE_UP_DOWN]);
 		break;
-	case GLFW_KEY_DOWN:
+	case SDLK_DOWN:
 		LinkedListOffer(mainOSM.linkedList,&operateCodes[INPUT_OPERATE_DOWN_DOWN]);
 		break;
-	case GLFW_KEY_LEFT:
+	case SDLK_LEFT:
 		LinkedListOffer(mainOSM.linkedList,&operateCodes[INPUT_OPERATE_LEFT_DOWN]);
 		break;
-	case GLFW_KEY_RIGHT:
+	case SDLK_RIGHT:
 		LinkedListOffer(mainOSM.linkedList,&operateCodes[INPUT_OPERATE_RIGHT_DOWN]);
 		break;
-	case GLFW_KEY_SPACE:
+	case SDLK_SPACE:
 		LinkedListOffer(mainOSM.linkedList,&operateCodes[INPUT_OPERATE_SPACE_DOWN]);
 		break;
 	default:
@@ -70,23 +55,23 @@ BOOL IN_KeyDown(int keynum)
 	return TRUE;
 }
 
-BOOL IN_KeyUp(int keynum)
+BOOL IN_KeyUp(SDL_Keycode keynum)
 {
 	switch(keynum)
 	{
-	case GLFW_KEY_UP:
+	case SDLK_UP:
 		LinkedListOffer(mainOSM.linkedList,&operateCodes[INPUT_OPERATE_UP_UP]);
 		break;
-	case GLFW_KEY_DOWN:
+	case SDLK_DOWN:
 		LinkedListOffer(mainOSM.linkedList,&operateCodes[INPUT_OPERATE_DOWN_UP]);
 		break;
-	case GLFW_KEY_LEFT:
+	case SDLK_LEFT:
 		LinkedListOffer(mainOSM.linkedList,&operateCodes[INPUT_OPERATE_LEFT_UP]);
 		break;
-	case GLFW_KEY_RIGHT:
+	case SDLK_RIGHT:
 		LinkedListOffer(mainOSM.linkedList,&operateCodes[INPUT_OPERATE_RIGHT_UP]);
 		break;
-	case GLFW_KEY_SPACE:
+	case SDLK_SPACE:
 		LinkedListOffer(mainOSM.linkedList,&operateCodes[INPUT_OPERATE_SPACE_UP]);
 		break;
 	default:
@@ -133,12 +118,12 @@ BOOL IN_TextInputEnable(long x,long y,long w,long h)
 {
 	if(inputEnabled)
 		return FALSE;
-	/*SDL_StartTextInput();
+	SDL_StartTextInput();
 	inputRect.x=x;
 	inputRect.y=y;
 	inputRect.w=w;
 	inputRect.h=h;
-	SDL_SetTextInputRect(&inputRect);*/
+	SDL_SetTextInputRect(&inputRect);
 	inputEnabled = TRUE;
 	inputChanged = TRUE;
 	inputChar[0] = '\0';
@@ -149,16 +134,19 @@ void IN_TextInputDisable()
 {
 	if(!inputEnabled)
 		return;
-	//SDL_StopTextInput();
+	SDL_StopTextInput();
 	inputEnabled = FALSE;
 }
 
 void IN_TextInputChar(char *str)
 {
+	static char buffer[32];
 	int length = strlen(str);
 	if((strlen(inputChar)+strlen(str)+1)>256)
 		return;
-	strcat(inputChar, str);
+	tb_charset_conv_cstr(TB_CHARSET_TYPE_UTF8, sizeof(wchar_t)==2?TB_CHARSET_TYPE_UCS2:TB_CHARSET_TYPE_UTF32,
+							str, buffer, 1);
+	strcat(inputChar, buffer);
 	inputChanged = TRUE;
 }
 
@@ -169,7 +157,7 @@ BOOL IN_TextInputChanged()
 	return changed;
 }
 
-void IN_TextInputGet(char *dest)
+void IN_TextInputGet(void *dest)
 {
-	strcpy(dest,inputChar);
+	memcpy(dest,inputChar,256);
 }

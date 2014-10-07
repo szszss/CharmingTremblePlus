@@ -18,9 +18,9 @@
 #pragma comment( lib, "glu32.lib")
 #endif
 
-#include "GLFW\glfw3.h"
-//#include "SDL.h"
-//#include "SDL_opengl.h"
+//#include "GLFW\glfw3.h"
+#include "SDL.h"
+#include "SDL_opengl.h"
 
 #ifdef OS_MAC
 #include <OpenGL/glu.h> 
@@ -38,11 +38,13 @@ void RE_RenderCubeDoCentre(float lx,float ly,float lz,float rx,float ry,float rz
 void RE_RenderCubeDoRight(float lx,float ly,float lz,float rx,float ry,float rz);
 void RE_DestroyQuicklyRender();
 void RE_DestroyFontRenderer();
-TextTexture* RE_ProcessTextTexture(char* utf8Text,float maxWidth);
-void RE_UpdateTextTextureCache();
+//TextTexture* RE_ProcessTextTexture(char* utf8Text,float maxWidth);
+//void RE_UpdateTextTextureCache();
+void RE_BindChar(wchar_t c);
 
-GLFWwindow* window = NULL;
-//static SDL_GLContext glContext = NULL;
+//GLFWwindow* window = NULL;
+SDL_Window *window = NULL;
+static SDL_GLContext glContext = NULL;
 //static FT_Library library = NULL;
 //static FT_Face face = NULL;
 static byte *fontData = NULL;
@@ -62,7 +64,7 @@ using namespace std;
 int RE_InitWindow(int width,int height)
 {
 	int result;
-	/*SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE,8);
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,8);
@@ -70,17 +72,17 @@ int RE_InitWindow(int width,int height)
 	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE,8);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,24); //深度缓冲如果过大会有奇妙的效果,我想也许是因为超过硬件支持的范围后,OpenGL只能采用软件模拟了
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,1);
-	window = SDL_CreateWindow(WINDOW_TITLE,SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,width,height,SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);*/
-	window = glfwCreateWindow(width, height, WINDOW_TITLE, NULL, NULL);
+	window = SDL_CreateWindow(WINDOW_TITLE,SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,width,height,SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+	//window = glfwCreateWindow(width, height, WINDOW_TITLE, NULL, NULL);
 	if(window==NULL)
 		GameCrash("Initialized window failed.");
 	LoggerInfo("Window initialized");
-	//glContext = SDL_GL_CreateContext(window);
-	glfwMakeContextCurrent(window);
-	/*if(glContext==NULL)
+	glContext = SDL_GL_CreateContext(window);
+	//glfwMakeContextCurrent(window);
+	if(glContext==NULL)
 	{
 		GameCrash("Initialized opengl(2.1) failed.");
-	}*/
+	}
 	LoggerInfo("OpenGL(2.1) initialized");
 	SDL_GL_SetSwapInterval(1);
 	RE_Reshape(width,height);
@@ -109,10 +111,10 @@ void RE_Reshape(int width,int height)
 
 void RE_DestroyWindow()
 {
-	/*if(glContext!=NULL)
-		SDL_GL_DeleteContext(glContext);*/
+	if(glContext!=NULL)
+		SDL_GL_DeleteContext(glContext);
 	if(window!=NULL)
-		glfwDestroyWindow(window);
+		SDL_DestroyWindow(window);
 	if(quicklyRenderList[0]!=0)
 	{
 		RE_DestroyQuicklyRender();
@@ -175,7 +177,7 @@ int RE_Render()
 	static float light0Diffuse[] = {1,1,1,1};
 	static Texture* texture = NULL;
 	//------------------一些处理-------------------
-	RE_UpdateTextTextureCache();
+	//RE_UpdateTextTextureCache();
 	//-------------------绘制3D-------------------
 	glClearColor( RE_CLEAR_COLOR ); //静怡的天蓝色
 	glClearDepth(1.0f);
@@ -221,7 +223,7 @@ int RE_Render()
 	RE_CheckGLError(RE_STAGE_FLUSH_2D);
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_BLEND);
-	glfwSwapBuffers(window);
+	SDL_GL_SwapWindow(window);
 	RE_CheckGLError(RE_STAGE_FINISH);
 	return 0;
 }
@@ -337,11 +339,11 @@ int RE_CheckGLError(char* stage)
 
 void RE_DrawRectWithTexture( float x,float y,float width,float height,float u,float v,float uw,float vh )
 {
-	x=x*2.0f-1.0f;
-	y=1.0f-(y*2.0f);
+	//x=x*2.0f-1.0f;
+	y=-y;
 	v=1.0f-v;
-	width*=2.0f;
-	height*=2.0f;
+	//width*=2.0f;
+	//height*=2.0f;
 	glBegin(GL_QUADS);
 		//glColor3f(1,1,1);
 		glTexCoord2f(u+uw,v-vh);glVertex3f(x+width,y-height,0);
@@ -483,33 +485,60 @@ void RE_DestroyFontRenderer()
 
 void RE_DrawText(wstring text, float x, float y, float width)
 {
-	x = x*2.0f - 1.0f;
-	y = 1.0f - (y*2.0f);
-	for (auto iter = text.begin(); iter != text.end(); wchar_t c = *iter, iter++)
+	wchar_t c;
+	y =-y;
+	float startX = x;
+	float width = 0.01f;
+	float height = 0.01f;
+	float rowWidth = 0.0f;
+	glBegin(GL_QUADS);
+	for (auto iter = text.begin(); iter != text.end(); c = *iter, iter++)
 	{
+		if(c == '\n' || rowWidth > width)
+		{
+			x = startX;
+			rowWidth = 0;
+			if(c == '\n')
+				continue;
+		}
 		RE_BindChar(c);
+		float u = (c & 15) * (1.0f / 16.0f); //与B1111(O15)做按位与,获得列数.
+		float v = ((c >> 4) & 15) * (1.0f / 16.0f); //先右移4位去掉列数,然后与B1111(O15)做按位与,获得行数.
+		const float uw = 1.0f / 16.0f;
+		const float vh = 1.0f / 16.0f;
 		v = 1.0f - v;
-		glBegin(GL_QUADS);
-		//glColor3f(1,1,1);
 		glTexCoord2f(u + uw, v - vh); glVertex3f(x + width, y - height, 0);
-		//glColor3f(0,0,1);
 		glTexCoord2f(u + uw, v); glVertex3f(x + width, y, 0);
 		glTexCoord2f(u, v); glVertex3f(x, y, 0);
 		glTexCoord2f(u, v - vh); glVertex3f(x, y - height, 0);
-		glEnd();
+		x += width;
+		rowWidth += width;
 	}
-	GLuint texture = charTextures[text]
+	glEnd();
 }
 
 void RE_BindChar(wchar_t c)
 {
-	static currentTexture=-1;
+	//TODO:释放文字纹理...
+	static stbtt_bakedchar unusedData[256]; //被浪费了啊,可惜
+	static GLuint currentTexture=-1;
 	GLuint texture = charTextures[c >> 8];
 	if (texture == -1)
 	{
-		//烘焙
+		byte *bitmap = (byte*)malloc_s(512*512*sizeof(byte));
+		stbtt_BakeFontBitmap(fontData, 0, 32.0f,
+			bitmap,512,512,
+			c, 256, unusedData);
+		glGenTextures(1, &texture);
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, 512,512, 0, GL_ALPHA, GL_UNSIGNED_BYTE, bitmap);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		free_s(bitmap);
 	}
-	if ()
+	if (currentTexture == texture)
+		return;
+	glBindTexture(GL_TEXTURE_2D, texture);
+	currentTexture = texture;
 }
 
 //旧的字体渲染函数
@@ -573,6 +602,8 @@ void RE_DrawTextVolatile( char* text,float x,float y,float width )
 	RE_BindTexture(&(texture->texture));
 	RE_DrawRectWithTexture(x,y,texture->texture.width/(float)windowWidth,texture->texture.height/(float)windowHeight,0,0,1,1);
 }*/
+
+/*
 
 TextTexture* RE_ProcessTextTexture( char* utf8Text,float maxWidth )
 {
@@ -681,3 +712,4 @@ void RE_UpdateTextTextureCache()
 		}
 	}
 }
+*/

@@ -238,7 +238,7 @@ void* EntityBlockCreate(World *world,float x,float y, ...)
 	va_list args;
 	EntityBlock *block = (EntityBlock*)malloc_s(sizeof(EntityBlock));
 	va_start(args,y);
-	EntityBlockCreate_Do(world,x,y,block,args,"image/stone.png",&entityBlockPrototype);
+	EntityBlockCreate_Do(world,x,y,block,args,"image/stone.png",(EntityPrototype*)&entityBlockPrototype);
 	va_end(args); 
 	return block;
 }
@@ -248,7 +248,7 @@ void* EntityBlockBrickCreate( World* world,float x,float y,... )
 	va_list args;
 	EntityBlock *block = (EntityBlock*)malloc_s(sizeof(EntityBlockBonus));
 	va_start(args,y);
-	EntityBlockCreate_Do(world,x,y,block,args,"image/brick.png",&entityBlockBrickPrototype);
+	EntityBlockCreate_Do(world,x,y,block,args,"image/brick.png",(EntityPrototype*)&entityBlockBrickPrototype);
 	((EntityBlockBonus*)block)->bonusType=0;
 	((EntityBlockBonus*)block)->bonusInNumber=0;
 	((EntityBlockBonus*)block)->bounsInFactor=2.0f;
@@ -262,7 +262,7 @@ void* EntityBlockMossyCreate( World* world,float x,float y,... )
 	va_list args;
 	EntityBlock *block = (EntityBlock*)malloc_s(sizeof(EntityBlockBonus));
 	va_start(args,y);
-	EntityBlockCreate_Do(world,x,y,block,args,"image/mossy.png",&entityBlockMossyPrototype);
+	EntityBlockCreate_Do(world,x,y,block,args,"image/mossy.png",(EntityPrototype*)&entityBlockMossyPrototype);
 	((EntityBlockBonus*)block)->bonusType=0;
 	((EntityBlockBonus*)block)->bonusInNumber=0;
 	((EntityBlockBonus*)block)->bounsInFactor=2.0f;
@@ -290,7 +290,7 @@ int EntityBlockUpdate(void* entity,World* world)
 		//LoggerDebug("yaya");
 		if((player->base.posY > block->base.posY-1.0f) && (player->base.posY - block->base.posY < 0.7f) && (player->speedY<=0))
 		{
-			EntityBlockPrototype *prototype = block->base.prototype;
+			EntityBlockPrototype *prototype = (EntityBlockPrototype*)block->base.prototype;
 			//LoggerDebug("yyyyy");
 			player->landed=TRUE;
 			player->base.posY = block->base.posY+0.5f;

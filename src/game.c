@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "renderengine.h"
 #include "resourcemanager.h"
-#include "GLFW\glfw3.h"
+#include "SDL.h"
 #include "util.h"
 #include "entity.h"
 #include "attribute.h"
@@ -17,7 +17,7 @@
 void GameClose();
 void GameMainLoop();
 int Update();
-//int HandleEvent(SDL_Event sdlEvent);
+int HandleEvent(SDL_Event sdlEvent);
 
 static int shouldRun = 1;
 unsigned long long tickTime = 0;
@@ -25,7 +25,7 @@ World* theWorld = NULL;
 char defPlayerName[256] = {0};
 static long long maxScore = 0;
 static BOOL gamePause = FALSE;
-extern GLFWwindow* window;
+//extern SDL_Window* window;
 
 #define QUICK_START
 
@@ -35,14 +35,14 @@ int main(int argc, char** argv)
 	OS_Init();
 	LoggerCreate(TRUE,"log.txt",LOGGER_APPEND,LOGGER_LEVEL_ALL,LOGGER_FORMAT_C);
 	LoggerInfo("Initializing game");
-	if(!glfwInit())
-		GameCrash("Initialized GLFW failed");
+	if(!SDL_Init(SDL_INIT_EVERYTHING))
+		GameCrash("Initialized SDL failed");
 	LoggerInfo("GLFW initialized");
 	MathInit();
 	RM_InitResourceManager();
 	PMD_Init();
 	RE_InitWindow(WINDOW_WIDTH,WINDOW_HEIGHT);
-	IN_InitInput(window);	
+	IN_InitInput();	
 	InitEntities();
 	InitAttributes();
 	GameMainLoop();
@@ -58,7 +58,7 @@ void GameMainLoop()
 	//WorldStart(theWorld);
 	Gui_Open(GuiScreenGame);
 	IN_Clear();
-	while (shouldRun && !glfwWindowShouldClose(window))
+	while (shouldRun)
 	{
 		if(OS_GetMsTime()-lastTime>WINDOW_FRAME)
 		{
@@ -78,7 +78,12 @@ void GameMainLoop()
 int Update()
 {
 	//处理事件
-	glfwPollEvents();
+	SDL_Event sdlEvent;
+	while(SDL_PollEvent(&sdlEvent))
+	{
+		if(HandleEvent(sdlEvent))
+			return -1;
+	}
 	if(!gamePause)
 	{
 		IN_UpdateInput(); //处理输入
@@ -91,7 +96,7 @@ int Update()
 	return 0;
 }
 
-/*int HandleEvent(SDL_Event sdlEvent)
+int HandleEvent(SDL_Event sdlEvent)
 {
 	switch (sdlEvent.type)
 	{
@@ -118,7 +123,7 @@ int Update()
 		return -1;
 	}
 	return 0;
-}*/
+}
 
 BOOL GameSetPause(BOOL pause)
 {
@@ -149,8 +154,8 @@ void GameClose()
 	PMD_Close();
 	RankDestroy();
 	RM_Close();
-	glfwTerminate();
-	LoggerInfo("GLFW terminated");
+	SDL_Quit();
+	LoggerInfo("SDL terminated");
 	LoggerClose();
 }
 
