@@ -12,6 +12,8 @@ static BOOL inputChanged = FALSE;
 
 static BOOL _DummyDelete(void* v){return 0;}
 
+using namespace std;
+
 int IN_InitInput()
 {
 	int i=0;

@@ -483,7 +483,12 @@ void RE_DestroyFontRenderer()
 	}*/
 }
 
-void RE_DrawText(wstring text, float x, float y, float width)
+void RE_DrawText(wstring *text, float x, float y, float width)
+{
+	RE_DrawText(text->data(), x, y, width);
+}
+
+void RE_DrawText(wchar_t *text, float x, float y, float width)
 {
 	wchar_t c;
 	y =-y;
@@ -492,8 +497,9 @@ void RE_DrawText(wstring text, float x, float y, float width)
 	float height = 0.01f;
 	float rowWidth = 0.0f;
 	glBegin(GL_QUADS);
-	for (auto iter = text.begin(); iter != text.end(); c = *iter, iter++)
+	for (; *text != 0; text++)
 	{
+		c = *text;
 		if(c == '\n' || rowWidth > width)
 		{
 			x = startX;

@@ -1,5 +1,6 @@
 ﻿#include "game.h"
 #include <stdlib.h>
+#include <string>
 #include "renderengine.h"
 #include "resourcemanager.h"
 #include "SDL.h"
@@ -22,7 +23,7 @@ int HandleEvent(SDL_Event sdlEvent);
 static int shouldRun = 1;
 unsigned long long tickTime = 0;
 World* theWorld = NULL;
-char defPlayerName[256] = {0};
+std::wstring defPlayerName = L"";
 static long long maxScore = 0;
 static BOOL gamePause = FALSE;
 //extern SDL_Window* window;

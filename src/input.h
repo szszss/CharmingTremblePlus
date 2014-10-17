@@ -3,6 +3,7 @@
 #include "memory.h"
 #include "collection.h"
 #include "SDL_keyboard.h"
+#include <wchar.h>
 
 /*#define INPUT_BITS_UP     1
 #define INPUT_BITS_DOWN   2

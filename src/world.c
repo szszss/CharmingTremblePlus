@@ -8,7 +8,9 @@ extern EntityPrototype entityBlockPrototype;
 extern EntityBlockPrototype entityBlockBrickPrototype;
 extern EntityBlockPrototype entityBlockMossyPrototype;
 
-World* WorldNewGame( char* playerName,long seed,enum WorldType type,enum WorldDifficulty difficulty )
+using namespace std;
+
+World* WorldNewGame( wstring playerName,long seed,enum WorldType type,enum WorldDifficulty difficulty )
 {
 	World *world = (World*)malloc_s(sizeof(World));
 	int i;

@@ -61,7 +61,7 @@ tbox_xml      = true
 tbox_charset  = true
 
 include "../src/"
-include "../lib/glfw/"
+--include "../lib/glfw/"
 include "../lib/sdl/"
 include "../lib/stb/"
 include "../lib/tbox/"

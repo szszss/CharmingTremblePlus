@@ -7,11 +7,11 @@
 
 static Rank *headRank = NULL;
 
-void RankCreate(char *name,long long score)
+void RankCreate(wchar_t *name,long long score)
 {
 	Rank *rank = (Rank*)malloc_s(sizeof(Rank));
-	rank->name = (char*)malloc_s(sizeof(char)*(strlen(name)+1));
-	strcpy(rank->name,name);
+	rank->name = (wchar_t*)malloc_s(sizeof(wchar_t)*(wcslen(name) + 1));
+	wcscpy(rank->name,name);
 	rank->score = score;
 	if(headRank==NULL)
 	{
@@ -20,7 +20,7 @@ void RankCreate(char *name,long long score)
 	}
 	else
 	{
-		char *tempC;
+		wchar_t *tempC;
 		long long tempL;
 		Rank *temp = headRank;
 		while((temp->score>score) && temp->nextRank!=NULL)
@@ -50,7 +50,7 @@ void RankWriteOut()
 	rank = headRank;
 	while(rank!=NULL)
 	{
-		fprintf(file,"玩家:%s 分数:%ld\n",rank->name,rank->score);
+		fwprintf(file,L"玩家:%s 分数:%ld\n",rank->name,rank->score);
 		rank = rank->nextRank;
 	}
 	fclose(file);
