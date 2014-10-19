@@ -483,12 +483,12 @@ void RE_DestroyFontRenderer()
 	}*/
 }
 
-void RE_DrawText(wstring *text, float x, float y, float width)
+void RE_DrawText(const wstring & text, float x, float y, float maxWidth)
 {
-	RE_DrawText(text->data(), x, y, width);
+	RE_DrawText(text.data(), x, y, maxWidth);
 }
 
-void RE_DrawText(wchar_t *text, float x, float y, float width)
+void RE_DrawText(wchar_t *text, float x, float y, float maxWidth)
 {
 	wchar_t c;
 	y =-y;
@@ -500,7 +500,7 @@ void RE_DrawText(wchar_t *text, float x, float y, float width)
 	for (; *text != 0; text++)
 	{
 		c = *text;
-		if(c == '\n' || rowWidth > width)
+		if(c == '\n' || rowWidth > maxWidth)
 		{
 			x = startX;
 			rowWidth = 0;

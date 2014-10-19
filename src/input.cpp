@@ -24,6 +24,7 @@ int IN_InitInput()
 		operateCodes[i]=(unsigned char)i;
 	}
 	LoggerInfo("Input processor initialized");
+	return 0;
 }
 
 void IN_DestroyInput()
@@ -142,13 +143,13 @@ void IN_TextInputDisable()
 
 void IN_TextInputChar(char *str)
 {
-	static char buffer[32];
+	//static char buffer[32];
 	int length = strlen(str);
 	if((strlen(inputChar)+strlen(str)+1)>256)
 		return;
-	tb_charset_conv_cstr(TB_CHARSET_TYPE_UTF8, sizeof(wchar_t)==2?TB_CHARSET_TYPE_UCS2:TB_CHARSET_TYPE_UTF32,
-							str, buffer, 1);
-	strcat(inputChar, buffer);
+	//tb_charset_conv_cstr(TB_CHARSET_TYPE_UTF8, sizeof(wchar_t)==2?TB_CHARSET_TYPE_UCS2:TB_CHARSET_TYPE_UTF32,
+	//						str, buffer, 1);
+	strcat(inputChar, str);
 	inputChanged = TRUE;
 }
 
@@ -159,7 +160,13 @@ BOOL IN_TextInputChanged()
 	return changed;
 }
 
-void IN_TextInputGet(void *dest)
+void IN_TextInputGet(wchar_t *out)
 {
-	memcpy(dest,inputChar,256);
+	wchar_t temp[256] = {0};
+	char *c = inputChar;
+	for(int i=0;c!=NULL;c++,i++)
+	{
+		temp[i] = *c;
+	}
+	wcscpy(out,temp);
 }

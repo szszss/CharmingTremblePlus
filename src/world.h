@@ -24,7 +24,7 @@ struct implWorld
 	MTRandomGen *randomGen;
 };
 
-World* WorldNewGame(std::wstring playerName,long seed,enum WorldType type,enum WorldDifficulty difficulty);
+World* WorldNewGame(const std::wstring & playerName,long seed,enum WorldType type,enum WorldDifficulty difficulty);
 void WorldStart(World* world);
 void WorldEnd(World* world);
 void WorldUpdate(World* world);

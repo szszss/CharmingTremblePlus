@@ -29,6 +29,12 @@
 	#endif
 #endif
 
+#ifdef OLD_STRUCT_TYPEDEF
+#define STRUCT_TYPEDEF struct
+#else
+#define STRUCT_TYPEDEF
+#endif
+
 typedef unsigned char byte;
 typedef unsigned long Hash;
 

@@ -187,6 +187,7 @@ Matrix MathMatrixMultiplyMatrix(Matrix* left,Matrix* right)
 
 Matrix MathMatrixMultiplyScalar(Matrix* matrix,float scalar)
 {
+	//TODO:SO FUCK
 	matrix->m00 *= scalar;
 	matrix->m01 *= scalar;
 	matrix->m02 *= scalar;
@@ -203,6 +204,8 @@ Matrix MathMatrixMultiplyScalar(Matrix* matrix,float scalar)
 	matrix->m31 *= scalar;
 	matrix->m32 *= scalar;
 	matrix->m33 *= scalar;
+
+	return *matrix;
 }
 
 void MathMatrixMultiplyVector3(Matrix* matrix,float x,float y,float z,float *store)

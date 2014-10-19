@@ -40,4 +40,4 @@ BOOL IN_TextInputEnable(long x,long y,long w,long h);
 void IN_TextInputDisable();
 void IN_TextInputChar(char *str);
 BOOL IN_TextInputChanged();
-void IN_TextInputGet(void *dest);
+void IN_TextInputGet(wchar_t *out);

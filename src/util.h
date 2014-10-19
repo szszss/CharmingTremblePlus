@@ -90,8 +90,8 @@ void SBDestroy(StringBuilder *sb);
 
 Hash HashCode(char* string);
 
-//unsigned long* UTF8ToUTF32(char* utf8Text);
-unsigned long* UTF8ToANSI(char* utf8Text);
+unsigned long* UTF8ToUTF32(char* utf8Text);
+wchar_t* UTF8ToANSI(char* utf8Text);
 char* UTF32ToUTF8(unsigned long* utf32Text);
 
 /*

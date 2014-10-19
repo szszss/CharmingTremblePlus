@@ -3,14 +3,14 @@
 #include "resourcemanager.h"
 #include "ranking.h"
 
+using namespace std;
+
 extern EntityPrototype entityPlayerPrototype;
-extern EntityPrototype entityBlockPrototype;
+extern EntityBlockPrototype entityBlockPrototype;
 extern EntityBlockPrototype entityBlockBrickPrototype;
 extern EntityBlockPrototype entityBlockMossyPrototype;
 
-using namespace std;
-
-World* WorldNewGame( wstring playerName,long seed,enum WorldType type,enum WorldDifficulty difficulty )
+World* WorldNewGame( const wstring & playerName,long seed,enum WorldType type,enum WorldDifficulty difficulty )
 {
 	World *world = (World*)malloc_s(sizeof(World));
 	int i;
@@ -33,7 +33,7 @@ World* WorldNewGame( wstring playerName,long seed,enum WorldType type,enum World
 
 void WorldStart(World* world)
 {
-	EntityBlock* block = (EntityBlock*)entityBlockPrototype.create(world,0,-14,5,0);
+	EntityBlock* block = (EntityBlock*)entityBlockPrototype.base.create(world,0,-14,5,0);
 	int i;
 	for(i=0;i<32;i++)
 	{
@@ -130,7 +130,7 @@ void WorldUpdate( World* world )
 				block = (EntityBlock*)entityBlockMossyPrototype.base.create(world,(float)x-9.5f,-16,length,world->depthLevel);
 				break;
 			default:
-				block = (EntityBlock*)entityBlockPrototype.create(world,(float)x-9.5f,-16,length,world->depthLevel);
+				block = (EntityBlock*)entityBlockPrototype.base.create(world,(float)x-9.5f,-16,length,world->depthLevel);
 				break;
 			}
 			LinkedListAdd(world->blockList,block);

@@ -54,9 +54,21 @@ BOOL FilePathExists(LPCTSTR lpPath)
 
 BOOL OS_PathExist(char* path)
 {
-	unsigned long *buffer = UTF8ToUTF32(path);
+	wchar_t *temp = UTF8ToANSI(path);
+	BOOL b = FilePathExists(temp);
+	free_s(temp);
+	return b;
+}
+
+BOOL OS_PathExist(wchar_t* path)
+{
 	BOOL b = FilePathExists(path);
-	free_s(buffer);
+	return b;
+}
+
+BOOL OS_PathExist(const std::wstring & path)
+{
+	BOOL b = FilePathExists(path.data());
 	return b;
 }
 

@@ -5,13 +5,16 @@
 #include <stdio.h>
 #include "util.h"
 
+using namespace std;
+
 static Rank *headRank = NULL;
 
-void RankCreate(wchar_t *name,long long score)
+void RankCreate( const std::wstring & name,long long score)
 {
 	Rank *rank = (Rank*)malloc_s(sizeof(Rank));
-	rank->name = (wchar_t*)malloc_s(sizeof(wchar_t)*(wcslen(name) + 1));
-	wcscpy(rank->name,name);
+	//rank->name = (wchar_t*)malloc_s(sizeof(wchar_t)*(name.length() + 1));
+	rank->name = name.data();
+	//wcscpy(rank->name,name.data());
 	rank->score = score;
 	if(headRank==NULL)
 	{
@@ -20,7 +23,7 @@ void RankCreate(wchar_t *name,long long score)
 	}
 	else
 	{
-		wchar_t *tempC;
+		wstring *tempC;
 		long long tempL;
 		Rank *temp = headRank;
 		while((temp->score>score) && temp->nextRank!=NULL)
@@ -32,9 +35,9 @@ void RankCreate(wchar_t *name,long long score)
 		tempL = rank->score;
 		rank->score = temp->score;
 		temp->score = tempL;
-		tempC = rank->name;
+		tempC = &rank->name;
 		rank->name = temp->name;
-		temp->name = tempC;
+		temp->name = *tempC;
 	}
 }
 
@@ -63,7 +66,6 @@ void RankDestroy()
 	{
 		Rank *lastRank = rank;
 		rank = rank->nextRank;
-		free_s(lastRank->name);
 		free_s(lastRank);
 	}
 	LoggerInfo("Ranking closed");

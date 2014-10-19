@@ -11,7 +11,7 @@ typedef struct implRank {
 	long long score;
 };
 
-void RankCreate(std::wstring name,long long score);
+void RankCreate(const std::wstring & name,long long score);
 void RankWriteOut();
 void RankDestroy();
 

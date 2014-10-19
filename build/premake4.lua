@@ -2,9 +2,9 @@ solution "CharmingTremblePlus"
 
 configurations {"Release", "Debug"}
 configuration "Release"
-	flags { "Optimize", "EnableSSE", "StaticRuntime", "NoMinimalRebuild", "FloatFast"}
+	flags { "Optimize", "EnableSSE", "Unicode"}
 configuration "Debug"
-	flags { "Symbols", "StaticRuntime" , "NoMinimalRebuild", "NoEditAndContinue" ,"FloatFast"}
+	flags { "Symbols", "NoEditAndContinue" ,"Unicode"}
 configuration{}
 
 if os.is("Linux") then

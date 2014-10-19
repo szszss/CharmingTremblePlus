@@ -6,7 +6,7 @@ configuration "Debug"
 	kind "ConsoleApp"
 configuration {}
 targetdir "../bin"
-links {"STL","STB","TBox"}
+links {"SDL","STB","TBox"}
 includedirs {
 	"../lib/glfw/include/",
 	"../lib/sdl/include/",

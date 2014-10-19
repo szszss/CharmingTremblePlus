@@ -30,7 +30,14 @@ static BOOL gamePause = FALSE;
 
 #define QUICK_START
 
-int main(int argc, char** argv)
+#if (defined(_WIN32) || defined(WIN32)) && defined(_UNICODE)
+/*int wmain(int argc, wchar_t *argv[], wchar_t *envp[])
+{
+	return main(0,NULL);
+}*/
+#endif
+
+extern "C" int _cdecl main(int argc, wchar_t *argv[])
 {
 	//int result;
 	OS_Init();
@@ -38,7 +45,7 @@ int main(int argc, char** argv)
 	LoggerInfo("Initializing game");
 	if(!SDL_Init(SDL_INIT_EVERYTHING))
 		GameCrash("Initialized SDL failed");
-	LoggerInfo("GLFW initialized");
+	LoggerInfo("SDL initialized");
 	MathInit();
 	RM_InitResourceManager();
 	PMD_Init();

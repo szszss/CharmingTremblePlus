@@ -260,6 +260,7 @@ BOOL PMD_ReadBone(PMD_Model *model,FILE *file)
 		model->bones[i].posY = LESReadFloat(file);
 		model->bones[i].posZ = LESReadFloat(file);
 	}
+	return TRUE;
 }
 
 PMD_ModelInstance* PMD_ModelInstanceCreate(PMD_Model *model)
