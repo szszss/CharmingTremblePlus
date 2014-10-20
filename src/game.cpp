@@ -43,8 +43,11 @@ extern "C" int _cdecl main(int argc, wchar_t *argv[])
 	OS_Init();
 	LoggerCreate(TRUE,"log.txt",LOGGER_APPEND,LOGGER_LEVEL_ALL,LOGGER_FORMAT_C);
 	LoggerInfo("Initializing game");
-	if(!SDL_Init(SDL_INIT_EVERYTHING))
+	if (SDL_Init(SDL_INIT_EVERYTHING)<0)
+	{
+		LoggerFatal("SDL Error:%s", SDL_GetError());
 		GameCrash("Initialized SDL failed");
+	}
 	LoggerInfo("SDL initialized");
 	MathInit();
 	RM_InitResourceManager();
@@ -100,7 +103,7 @@ int Update()
 			WorldUpdate(theWorld); //更新世界
 		}
 	}
-	Gui_Update(theWorld); //更新界面
+	//Gui_Update(theWorld); //更新界面
 	return 0;
 }
 

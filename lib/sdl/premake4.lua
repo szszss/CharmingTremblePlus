@@ -1,7 +1,7 @@
 project "SDL"
 language "C"
 kind "SharedLib"
-targetdir "../../bin/"
+targetdir ("../../bin/install" .. suffix)
 objdir "../../bin/obj"
 includedirs {
 	"include/",

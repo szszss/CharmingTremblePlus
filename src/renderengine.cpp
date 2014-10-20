@@ -70,7 +70,7 @@ int RE_InitWindow(int width,int height)
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,8);
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,8);
 	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE,8);
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,24); //深度缓冲如果过大会有奇妙的效果,我想也许是因为超过硬件支持的范围后,OpenGL只能采用软件模拟了
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,24); //深度缓冲Failed to init font如果过大会有奇妙的效果,我想也许是因为超过硬件支持的范围后,OpenGL只能采用软件模拟了
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,1);
 	window = SDL_CreateWindow(WINDOW_TITLE,SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,width,height,SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
 	//window = glfwCreateWindow(width, height, WINDOW_TITLE, NULL, NULL);
@@ -195,6 +195,16 @@ int RE_Render()
 	glLightfv(GL_LIGHT0,GL_POSITION,light0Position);
 	glLightfv(GL_LIGHT0,GL_DIFFUSE,light0Diffuse);
 	glTranslatef(0.0f, 0.0f, -42);
+	glBegin(GL_QUADS);
+	glColor3f(1, 1, 1); glVertex3f(-10, -10, 0);
+	glColor3f(1, 1, 1); glVertex3f(-10, 10, 0);
+	glColor3f(1, 1, 1); glVertex3f(10, 10, 0);
+	glColor3f(1, 1, 1); glVertex3f(10, -10, 0);
+	glColor3f(1, 1, 1); glVertex3f(-10, -10, 0);
+	glColor3f(1, 1, 1); glVertex3f(10, -10, 0);
+	glColor3f(1, 1, 1); glVertex3f(10, 10, 0);
+	glColor3f(1, 1, 1); glVertex3f(-10, 10, 0);
+	glEnd();
 	if(theWorld!=NULL)
 	{
 		WorldRender(theWorld);
@@ -209,15 +219,16 @@ int RE_Render()
 	//-------------------绘制2D-------------------
 	RE_CheckGLError(RE_STAGE_BEFORE_DRAW_2D);
 	glMatrixMode(GL_PROJECTION);
-	//glLoadIdentity();
-	glOrtho(0, 1.0, -1.0, 0.0, 0.5, 10.0); //将投影矩阵放置在第四象限
+	glLoadIdentity();
+	//glOrtho(0, 1.0, -1.0, 0.0, 0.5, 10.0); //将投影矩阵放置在第四象限
+	glOrtho(-1.0, 1.0, -1.0, 1.0, 0.5, 10.0);
 	glTranslatef(0.0f, 0.0f, 1.0f);
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	Gui_Render(theWorld);
+	//Gui_Render(theWorld);
 	RE_CheckGLError(RE_STAGE_AFTER_DRAW_2D);
 	glFlush();
 	RE_CheckGLError(RE_STAGE_FLUSH_2D);
@@ -345,12 +356,20 @@ void RE_DrawRectWithTexture( float x,float y,float width,float height,float u,fl
 	//width*=2.0f;
 	//height*=2.0f;
 	glBegin(GL_QUADS);
-		//glColor3f(1,1,1);
+glTexCoord2f(u,v-vh);glVertex3f(x,y-height,0);
+glTexCoord2f(u,v);glVertex3f(x,y,0);
+glTexCoord2f(u+uw,v);glVertex3f(x+width, y,0);
 		glTexCoord2f(u+uw,v-vh);glVertex3f(x+width,y-height,0);
-		//glColor3f(0,0,1);
-		glTexCoord2f(u+uw,v);glVertex3f(x+width, y,0);
-		glTexCoord2f(u,v);glVertex3f(x,y,0);
-		glTexCoord2f(u,v-vh);glVertex3f(x,y-height,0);
+		
+		glTexCoord2f(0, 0); glVertex3f(-1, -1, 0);
+		glTexCoord2f(0, 1); glVertex3f(-1, 1, 0);
+		glTexCoord2f(1, 1); glVertex3f(1, 1, 0);
+		glTexCoord2f(1, 0); glVertex3f(1, -1, 0);
+		glTexCoord2f(0, 0); glVertex3f(-1, -1, 0);
+		glTexCoord2f(1, 0); glVertex3f(1, -1, 0);
+		glTexCoord2f(1, 1); glVertex3f(1, 1, 0);
+		glTexCoord2f(0, 1); glVertex3f(-1, 1, 0);
+		
 	glEnd();
 }
 

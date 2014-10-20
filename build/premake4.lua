@@ -16,10 +16,6 @@ if os.is("Linux") then
 else
     platforms {"x32", "x64"}
 end
-
-configuration {"Windows"}
-	defines { "_CRT_SECURE_NO_WARNINGS","_CRT_SECURE_NO_DEPRECATE"}
-configuration{}
   
 if _ACTION == "xcode4" then
 	xcodebuildsettings
@@ -35,17 +31,20 @@ act = ""
     if _ACTION then
     act = _ACTION
 end
+
 configuration {"x32"}
-	targetsuffix ("_" .. act)
+	suffix = "_" .. act
 configuration "x64"		
-	targetsuffix ("_" .. act .. "_64" )
+	suffix = "_" .. act .. "_64"
 configuration {"x64", "debug"}
-	targetsuffix ("_" .. act .. "_x64_debug")
+	suffix = "_" .. act .. "_x64_debug"
 configuration {"x64", "release"}
-	targetsuffix ("_" .. act .. "_x64_release" )
+	suffix = "_" .. act .. "_x64_release" 
 configuration {"x32", "debug"}
-	targetsuffix ("_" .. act .. "_debug" )
+	suffix = "_" .. act .. "_debug"
 configuration{}
+
+targetsuffix (suffix)
 
 targetdir "../bin"
 	
