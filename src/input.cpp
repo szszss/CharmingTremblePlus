@@ -164,7 +164,7 @@ void IN_TextInputGet(wchar_t *out)
 {
 	wchar_t temp[256] = {0};
 	char *c = inputChar;
-	for(int i=0;c!=NULL;c++,i++)
+	for(int i=0;*c!=NULL;c++,i++)
 	{
 		temp[i] = *c;
 	}

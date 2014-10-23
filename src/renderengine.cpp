@@ -49,7 +49,9 @@ static SDL_GLContext glContext = NULL;
 //static FT_Face face = NULL;
 static byte *fontData = NULL;
 static stbtt_fontinfo fontInfo;
-static GLuint charTextures[sizeof(wchar_t) == 2 ? 256 : 4351] = { -1 };
+static GLuint charTextures[sizeof(wchar_t) == 2 ? 256 : 4351];
+static stbtt_bakedchar *charInfo[sizeof(wchar_t) == 2 ? 256 : 4351];
+static BOOL fontRendering = FALSE;
 //static LinkedList *textTextureCache = NULL;
 static GLdouble aspect;
 static GLuint quicklyRenderList[20]={0};
@@ -70,7 +72,7 @@ int RE_InitWindow(int width,int height)
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,8);
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,8);
 	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE,8);
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,24); //深度缓冲Failed to init font如果过大会有奇妙的效果,我想也许是因为超过硬件支持的范围后,OpenGL只能采用软件模拟了
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,24); //深度缓冲如果过大会有奇妙的效果,我想也许是因为超过硬件支持的范围后,OpenGL只能采用软件模拟了
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,1);
 	window = SDL_CreateWindow(WINDOW_TITLE,SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,width,height,SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
 	//window = glfwCreateWindow(width, height, WINDOW_TITLE, NULL, NULL);
@@ -184,6 +186,7 @@ int RE_Render()
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT ); //清理缓存
 	RE_CheckGLError(RE_STAGE_BEFORE_DRAW_3D);
 	glMatrixMode(GL_PROJECTION); //重设定投影矩阵
+	glLoadIdentity();
 	glFrustum(-0.35,0.65,-aspect/2,aspect/2,1,1024);
 	glMatrixMode( GL_MODELVIEW ); //设定模型视角矩阵
 	glLoadIdentity();
@@ -195,16 +198,6 @@ int RE_Render()
 	glLightfv(GL_LIGHT0,GL_POSITION,light0Position);
 	glLightfv(GL_LIGHT0,GL_DIFFUSE,light0Diffuse);
 	glTranslatef(0.0f, 0.0f, -42);
-	glBegin(GL_QUADS);
-	glColor3f(1, 1, 1); glVertex3f(-10, -10, 0);
-	glColor3f(1, 1, 1); glVertex3f(-10, 10, 0);
-	glColor3f(1, 1, 1); glVertex3f(10, 10, 0);
-	glColor3f(1, 1, 1); glVertex3f(10, -10, 0);
-	glColor3f(1, 1, 1); glVertex3f(-10, -10, 0);
-	glColor3f(1, 1, 1); glVertex3f(10, -10, 0);
-	glColor3f(1, 1, 1); glVertex3f(10, 10, 0);
-	glColor3f(1, 1, 1); glVertex3f(-10, 10, 0);
-	glEnd();
 	if(theWorld!=NULL)
 	{
 		WorldRender(theWorld);
@@ -220,15 +213,19 @@ int RE_Render()
 	RE_CheckGLError(RE_STAGE_BEFORE_DRAW_2D);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	//glOrtho(0, 1.0, -1.0, 0.0, 0.5, 10.0); //将投影矩阵放置在第四象限
-	glOrtho(-1.0, 1.0, -1.0, 1.0, 0.5, 10.0);
-	glTranslatef(0.0f, 0.0f, 1.0f);
+	glOrtho(0, 1.0, -1.0, 0.0, 0.5, 10.0); //将投影矩阵放置在第四象限
+	//glOrtho(-1.0, 1.0, -1.0, 1.0, 0.5, 10.0);
+	//glTranslatef(0.0f, 0.0f, 1.0f);
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
+	glTranslatef(0.0f, 0.0f, -1.0f);
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//Gui_Render(theWorld);
+	Gui_Render(theWorld);
+	glBindTexture(GL_TEXTURE_2D, charTextures[24320 >> 8]);
+	RE_DrawRectWithTexture(0, 0, 0.7, 0.7, 0, 0, 1, 1);
+	glBindTexture(GL_TEXTURE_2D, NULL);
 	RE_CheckGLError(RE_STAGE_AFTER_DRAW_2D);
 	glFlush();
 	RE_CheckGLError(RE_STAGE_FLUSH_2D);
@@ -356,20 +353,10 @@ void RE_DrawRectWithTexture( float x,float y,float width,float height,float u,fl
 	//width*=2.0f;
 	//height*=2.0f;
 	glBegin(GL_QUADS);
-glTexCoord2f(u,v-vh);glVertex3f(x,y-height,0);
-glTexCoord2f(u,v);glVertex3f(x,y,0);
-glTexCoord2f(u+uw,v);glVertex3f(x+width, y,0);
 		glTexCoord2f(u+uw,v-vh);glVertex3f(x+width,y-height,0);
-		
-		glTexCoord2f(0, 0); glVertex3f(-1, -1, 0);
-		glTexCoord2f(0, 1); glVertex3f(-1, 1, 0);
-		glTexCoord2f(1, 1); glVertex3f(1, 1, 0);
-		glTexCoord2f(1, 0); glVertex3f(1, -1, 0);
-		glTexCoord2f(0, 0); glVertex3f(-1, -1, 0);
-		glTexCoord2f(1, 0); glVertex3f(1, -1, 0);
-		glTexCoord2f(1, 1); glVertex3f(1, 1, 0);
-		glTexCoord2f(0, 1); glVertex3f(-1, 1, 0);
-		
+		glTexCoord2f(u + uw, v); glVertex3f(x + width, y, 0);
+		glTexCoord2f(u, v); glVertex3f(x, y, 0);
+		glTexCoord2f(u, v - vh); glVertex3f(x, y - height, 0);
 	glEnd();
 }
 
@@ -466,6 +453,8 @@ int RE_InitFontRenderer(int width,int height)
 		return -1;
 	}
 	free_s(font);
+	int count = sizeof(wchar_t) == 2 ? 256 : 4351;
+	memset(charTextures, 0xFFFFFFFF, count*sizeof(GLuint));
 	//result = FT_Set_Char_Size(face,4<<6,0,300,300);
 	//if(result)
 	//	return result;
@@ -502,65 +491,97 @@ void RE_DestroyFontRenderer()
 	}*/
 }
 
-void RE_DrawText(const wstring & text, float x, float y, float maxWidth)
-{
-	RE_DrawText(text.data(), x, y, maxWidth);
-}
-
 void RE_DrawText(wchar_t *text, float x, float y, float maxWidth)
 {
+	//return;
 	wchar_t c;
 	y =-y;
+	x *= 800.0f;
+	y *= 600.0f;
+	maxWidth *= 800.0f;
 	float startX = x;
-	float width = 0.01f;
-	float height = 0.01f;
-	float rowWidth = 0.0f;
+	float height = 30.0f;
+	float baseX = startX;
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	glOrtho(0, 800.0, -600.0, 0.0, 0.5, 10.0);
+	glMatrixMode(GL_MODELVIEW);
 	glBegin(GL_QUADS);
-	for (; *text != 0; text++)
+	fontRendering = TRUE;
+	for (; *text != NULL; text++)
 	{
 		c = *text;
-		if(c == '\n' || rowWidth > maxWidth)
+		if (c == '\n' || (baseX - startX) > maxWidth)
 		{
 			x = startX;
-			rowWidth = 0;
+			baseX = 0;
+			y += height;
 			if(c == '\n')
 				continue;
 		}
 		RE_BindChar(c);
-		float u = (c & 15) * (1.0f / 16.0f); //与B1111(O15)做按位与,获得列数.
+		/*float u = (c & 15) * (1.0f / 16.0f); //与B1111(O15)做按位与,获得列数.
 		float v = ((c >> 4) & 15) * (1.0f / 16.0f); //先右移4位去掉列数,然后与B1111(O15)做按位与,获得行数.
 		const float uw = 1.0f / 16.0f;
 		const float vh = 1.0f / 16.0f;
-		v = 1.0f - v;
+		v = 1.0f - v;*/
+		/*
 		glTexCoord2f(u + uw, v - vh); glVertex3f(x + width, y - height, 0);
 		glTexCoord2f(u + uw, v); glVertex3f(x + width, y, 0);
 		glTexCoord2f(u, v); glVertex3f(x, y, 0);
 		glTexCoord2f(u, v - vh); glVertex3f(x, y - height, 0);
-		x += width;
-		rowWidth += width;
+		*/
+		stbtt_bakedchar *cInfo = charInfo[c >> 8];
+		stbtt_aligned_quad q;
+		stbtt_GetBakedQuad(cInfo, 512, 512, c & 255, &x, &y, &q, 1);//1=opengl & d3d10+,0=d3d9
+		q.y1 = q.y0 - (q.y1 - q.y0);
+		glTexCoord2f(q.s0, q.t1); glVertex2f(q.x0, q.y0);
+		glTexCoord2f(q.s1, q.t1); glVertex2f(q.x1, q.y0);
+		glTexCoord2f(q.s1, q.t0); glVertex2f(q.x1, q.y1);
+		glTexCoord2f(q.s0, q.t0); glVertex2f(q.x0, q.y1);
+		baseX = x;
 	}
+	fontRendering = FALSE;
 	glEnd();
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
 }
 
 void RE_BindChar(wchar_t c)
 {
 	//TODO:释放文字纹理...
-	static stbtt_bakedchar unusedData[256]; //被浪费了啊,可惜
-	static GLuint currentTexture=-1;
+	//static stbtt_bakedchar unusedData[256]; //被浪费了啊,可惜
+	static GLuint currentTexture = 0xFFFFFFFF;
 	GLuint texture = charTextures[c >> 8];
-	if (texture == -1)
+	if (texture == 0xFFFFFFFF)
 	{
+		if (fontRendering == TRUE)
+			glEnd();
 		byte *bitmap = (byte*)malloc_s(512*512*sizeof(byte));
-		stbtt_BakeFontBitmap(fontData, 0, 32.0f,
+		charInfo[c >> 8] = (stbtt_bakedchar*)malloc_s(256 * sizeof(stbtt_bakedchar));
+		stbtt_BakeFontBitmap(fontData, 0, 30.0f,
 			bitmap,512,512,
-			c, 256, unusedData);
+			c, 256, charInfo[c >> 8]);
 		glGenTextures(1, &texture);
 		glBindTexture(GL_TEXTURE_2D, texture);
+		/*static byte tempBytes[256];
+		for (int i = 0; i < 128; i++)
+		{
+			memcpy(tempBytes, bitmap+i*256, 256 * sizeof(byte));
+			memcpy(bitmap + i * 256, bitmap + (255-i) * 256, 256 * sizeof(byte));
+			memcpy(bitmap + (255 - i) * 256, tempBytes, 256 * sizeof(byte));
+		}*/
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, 512,512, 0, GL_ALPHA, GL_UNSIGNED_BYTE, bitmap);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 		free_s(bitmap);
+		charTextures[c >> 8] = texture;
+		if (fontRendering == TRUE)
+			glBegin(GL_QUADS);
 	}
-	if (currentTexture == texture)
+	else if (currentTexture == texture)
 		return;
 	glBindTexture(GL_TEXTURE_2D, texture);
 	currentTexture = texture;

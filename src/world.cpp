@@ -10,7 +10,7 @@ extern EntityBlockPrototype entityBlockPrototype;
 extern EntityBlockPrototype entityBlockBrickPrototype;
 extern EntityBlockPrototype entityBlockMossyPrototype;
 
-World* WorldNewGame( const wstring & playerName,long seed,enum WorldType type,enum WorldDifficulty difficulty )
+World* WorldNewGame(wchar_t* playerName, long seed, enum WorldType type, enum WorldDifficulty difficulty)
 {
 	World *world = (World*)malloc_s(sizeof(World));
 	int i;

@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include <string>
+#include <wchar.h>
 #include "game.h"
 #include "collection.h"
 #include "entity.h"
@@ -7,7 +7,7 @@
 
 struct implWorld
 {
-	std::wstring playerName;
+	wchar_t* playerName;
 	EntityPlayer *players[32];
 	long seed;
 	unsigned long tick;
@@ -24,7 +24,7 @@ struct implWorld
 	MTRandomGen *randomGen;
 };
 
-World* WorldNewGame(const std::wstring & playerName,long seed,enum WorldType type,enum WorldDifficulty difficulty);
+World* WorldNewGame(wchar_t* playerName,long seed,enum WorldType type,enum WorldDifficulty difficulty);
 void WorldStart(World* world);
 void WorldEnd(World* world);
 void WorldUpdate(World* world);

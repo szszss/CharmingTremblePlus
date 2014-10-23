@@ -1,6 +1,6 @@
 ﻿#include "game.h"
 #include <stdlib.h>
-#include <string>
+#include <wchar.h>
 #include "renderengine.h"
 #include "resourcemanager.h"
 #include "SDL.h"
@@ -22,8 +22,8 @@ int HandleEvent(SDL_Event sdlEvent);
 
 static int shouldRun = 1;
 unsigned long long tickTime = 0;
-World* theWorld = NULL;
-std::wstring defPlayerName = L"";
+World *theWorld = NULL;
+wchar_t *defPlayerName = L"";
 static long long maxScore = 0;
 static BOOL gamePause = FALSE;
 //extern SDL_Window* window;
@@ -103,7 +103,7 @@ int Update()
 			WorldUpdate(theWorld); //更新世界
 		}
 	}
-	//Gui_Update(theWorld); //更新界面
+	Gui_Update(theWorld); //更新界面
 	return 0;
 }
 
