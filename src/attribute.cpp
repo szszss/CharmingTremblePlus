@@ -115,7 +115,6 @@ void AttributeRender(World *world,Entity *entity)
 	LinkedListIterator *iterator = NULL;
 	for(iterator=LinkedListGetIterator(linkedList);LinkedListIteratorHasNext(iterator);)
 	{
-		BOOL keepLive;
 		AttributeInstance *attributeInstance = (AttributeInstance*)LinkedListIteratorGetNext(iterator);
 		attributeInstance->attribute->onRender(world,entity,attributeInstance);
 	}

@@ -9,11 +9,11 @@ using namespace std;
 
 static Rank *headRank = NULL;
 
-void RankCreate( const std::wstring & name,long long score)
+void RankCreate( wchar_t* name,long long score)
 {
 	Rank *rank = (Rank*)malloc_s(sizeof(Rank));
 	//rank->name = (wchar_t*)malloc_s(sizeof(wchar_t)*(name.length() + 1));
-	rank->name = name.data();
+	rank->name = name;
 	//wcscpy(rank->name,name.data());
 	rank->score = score;
 	if(headRank==NULL)
@@ -23,7 +23,7 @@ void RankCreate( const std::wstring & name,long long score)
 	}
 	else
 	{
-		wstring *tempC;
+		wchar_t **tempC;
 		long long tempL;
 		Rank *temp = headRank;
 		while((temp->score>score) && temp->nextRank!=NULL)
@@ -44,7 +44,7 @@ void RankCreate( const std::wstring & name,long long score)
 void RankWriteOut()
 {
 	Rank *rank = NULL;
-	FILE* file = fopen("ranking.txt","w");
+	FILE* file = _wfopen(L"ranking.txt",L"w,ccs=UNICODE");
 	if(file==NULL)
 	{
 		LoggerError("Failed to write out ranking file.");
@@ -56,6 +56,7 @@ void RankWriteOut()
 		fwprintf(file,L"玩家:%s 分数:%ld\n",rank->name,rank->score);
 		rank = rank->nextRank;
 	}
+	fflush(file);
 	fclose(file);
 }
 

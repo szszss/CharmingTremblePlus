@@ -3,15 +3,15 @@
 #define ranking_h__
 
 #include "game.h"
-#include <string>
+#include <wchar.h>
 
 typedef struct implRank {
 	Rank *nextRank;
-	std::wstring name;
+	wchar_t* name;
 	long long score;
 };
 
-void RankCreate(const std::wstring & name,long long score);
+void RankCreate(wchar_t* name,long long score);
 void RankWriteOut();
 void RankDestroy();
 

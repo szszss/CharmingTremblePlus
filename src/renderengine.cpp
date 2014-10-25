@@ -98,6 +98,12 @@ int RE_InitWindow(int width,int height)
 		GameCrash("Initialized Font renderer failed.");
 	}
 	LoggerInfo("Font renderer initialized");
+
+	/*for (int w = 0; w < 256; w++)
+	{
+		RE_BindChar(w<<8);
+	}*/
+
 	return 0;
 }
 
@@ -223,9 +229,9 @@ int RE_Render()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	Gui_Render(theWorld);
-	glBindTexture(GL_TEXTURE_2D, charTextures[24320 >> 8]);
-	RE_DrawRectWithTexture(0, 0, 0.7, 0.7, 0, 0, 1, 1);
-	glBindTexture(GL_TEXTURE_2D, NULL);
+	//glBindTexture(GL_TEXTURE_2D, charTextures[0]);
+	//RE_DrawRectWithTexture(0, 0, 0.7, 0.7, 0, 0, 1, 1);
+	//glBindTexture(GL_TEXTURE_2D, NULL);
 	RE_CheckGLError(RE_STAGE_AFTER_DRAW_2D);
 	glFlush();
 	RE_CheckGLError(RE_STAGE_FLUSH_2D);
@@ -455,13 +461,6 @@ int RE_InitFontRenderer(int width,int height)
 	free_s(font);
 	int count = sizeof(wchar_t) == 2 ? 256 : 4351;
 	memset(charTextures, 0xFFFFFFFF, count*sizeof(GLuint));
-	//result = FT_Set_Char_Size(face,4<<6,0,300,300);
-	//if(result)
-	//	return result;
-	//result = FT_Select_Charmap(face,FT_ENCODING_UNICODE);
-	//if(result)
-	//	return result;
-	//textTextureCache = LinkedListCreate();
 	return 0;
 }
 
@@ -491,6 +490,70 @@ void RE_DestroyFontRenderer()
 	}*/
 }
 
+void stbtt_GetBakedQuad_Custom(stbtt_bakedchar *chardata, int char_index, float *xpos, float *ypos, stbtt_aligned_quad *q, float scale)
+{
+	const float ipw = 1.0f / 512.0f, iph = 1.0f / 512.0f;
+	stbtt_bakedchar *b = chardata + char_index;
+	int round_x = (int)floor((*xpos + b->xoff) + 0.5);
+	int round_y = (int)floor((*ypos + b->yoff) + 0.5) - b->yoff - 20.0f;
+	float x = b->x1 - b->x0;
+	float y = b->y1 - b->y0;
+	q->x0 = round_x;
+	q->y0 = round_y;
+
+	q->x1 = q->x0 + x * scale;
+	q->y1 = q->y0 + y * scale;
+
+	q->s0 = b->x0 * ipw;
+	q->t0 = b->y0 * iph;
+	q->s1 = b->x1 * ipw;
+	q->t1 = b->y1 * iph;
+
+	*xpos += b->xadvance;
+}
+
+int stbtt_BakeFontBitmap_Custom(stbtt_fontinfo f, int offset,
+	float pixel_height,
+	unsigned char *pixels, int pw, int ph,
+	int first_char, int num_chars,
+	stbtt_bakedchar *chardata)
+{
+	float scale;
+	int x, y, bottom_y, i;
+	memset(pixels, 0, pw*ph);
+	x = y = 1;
+	bottom_y = 1;
+
+	scale = stbtt_ScaleForPixelHeight(&f, pixel_height);
+
+	for (i = 0; i < num_chars; ++i) {
+		int advance, lsb, x0, y0, x1, y1, gw, gh;
+		int g = stbtt_FindGlyphIndex(&f, first_char + i);
+		stbtt_GetGlyphHMetrics(&f, g, &advance, &lsb);
+		stbtt_GetGlyphBitmapBox(&f, g, scale, scale, &x0, &y0, &x1, &y1);
+		gw = x1 - x0;
+		gh = y1 - y0;
+		if (x + gw + 1 >= pw)
+			y = bottom_y, x = 1; // advance to next row
+		if (y + gh + 1 >= ph) // check if it fits vertically AFTER potentially moving to next row
+			return -i;
+		//STBTT_assert(x + gw < pw);
+		//STBTT_assert(y + gh < ph);
+		stbtt_MakeGlyphBitmap(&f, pixels + x + y*pw, gw, gh, pw, scale, scale, g);
+		chardata[i].x0 = (short)x;
+		chardata[i].y0 = (short)y;
+		chardata[i].x1 = (short)(x + gw);
+		chardata[i].y1 = (short)(y + gh);
+		chardata[i].xadvance = scale * advance;
+		chardata[i].xoff = (float)x0;
+		chardata[i].yoff = (float)y0;
+		x = x + gw + 2;
+		if (y + gh + 2 > bottom_y)
+			bottom_y = y + gh + 2;
+	}
+	return bottom_y;
+}
+
 void RE_DrawText(wchar_t *text, float x, float y, float maxWidth)
 {
 	//return;
@@ -516,7 +579,7 @@ void RE_DrawText(wchar_t *text, float x, float y, float maxWidth)
 		{
 			x = startX;
 			baseX = 0;
-			y += height;
+			y -= height;
 			if(c == '\n')
 				continue;
 		}
@@ -534,12 +597,16 @@ void RE_DrawText(wchar_t *text, float x, float y, float maxWidth)
 		*/
 		stbtt_bakedchar *cInfo = charInfo[c >> 8];
 		stbtt_aligned_quad q;
-		stbtt_GetBakedQuad(cInfo, 512, 512, c & 255, &x, &y, &q, 1);//1=opengl & d3d10+,0=d3d9
-		q.y1 = q.y0 - (q.y1 - q.y0);
-		glTexCoord2f(q.s0, q.t1); glVertex2f(q.x0, q.y0);
-		glTexCoord2f(q.s1, q.t1); glVertex2f(q.x1, q.y0);
-		glTexCoord2f(q.s1, q.t0); glVertex2f(q.x1, q.y1);
-		glTexCoord2f(q.s0, q.t0); glVertex2f(q.x0, q.y1);
+		int index = c & 255;
+		stbtt_GetBakedQuad_Custom(cInfo, index, &x, &y, &q, 0.8f);
+		//q.y1 = q.y0 - (q.y1 - q.y0);
+		float xOffest = 5;
+		float yOffset = (cInfo + index)->yoff + 20.0f;
+		glTexCoord2f(q.s0, q.t1); glVertex2f(q.x0 - xOffest, q.y0);
+		glTexCoord2f(q.s1, q.t1); glVertex2f(q.x1 - xOffest, q.y0);
+		glTexCoord2f(q.s1, q.t0); glVertex2f(q.x1 - xOffest, q.y1);
+		glTexCoord2f(q.s0, q.t0); glVertex2f(q.x0 - xOffest, q.y1);
+		x -= 5.0f;
 		baseX = x;
 	}
 	fontRendering = FALSE;
@@ -559,11 +626,14 @@ void RE_BindChar(wchar_t c)
 	{
 		if (fontRendering == TRUE)
 			glEnd();
-		byte *bitmap = (byte*)malloc_s(512*512*sizeof(byte));
+		long long time = OS_GetMsTime();
+		static byte bitmap[512*512];
 		charInfo[c >> 8] = (stbtt_bakedchar*)malloc_s(256 * sizeof(stbtt_bakedchar));
-		stbtt_BakeFontBitmap(fontData, 0, 30.0f,
+		//char *fileName = "";
+		//FILE *cache = fopen();
+		stbtt_BakeFontBitmap_Custom(fontInfo, 0, 30.0f,
 			bitmap,512,512,
-			c, 256, charInfo[c >> 8]);
+			(c >> 8) << 8, 256, charInfo[c >> 8]);
 		glGenTextures(1, &texture);
 		glBindTexture(GL_TEXTURE_2D, texture);
 		/*static byte tempBytes[256];
@@ -575,15 +645,21 @@ void RE_BindChar(wchar_t c)
 		}*/
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, 512,512, 0, GL_ALPHA, GL_UNSIGNED_BYTE, bitmap);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-		free_s(bitmap);
+		//free_s(bitmap);
 		charTextures[c >> 8] = texture;
+		LoggerDebug("A character bitmap:%d has been generated, took time: %ldms", c >> 8, OS_GetMsTime()-time);
 		if (fontRendering == TRUE)
 			glBegin(GL_QUADS);
 	}
 	else if (currentTexture == texture)
 		return;
+	if (fontRendering == TRUE)
+		glEnd();
 	glBindTexture(GL_TEXTURE_2D, texture);
+	if (fontRendering == TRUE)
+		glBegin(GL_QUADS);
 	currentTexture = texture;
 }
 

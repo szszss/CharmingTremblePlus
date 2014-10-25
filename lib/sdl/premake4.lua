@@ -1,7 +1,21 @@
 project "SDL"
 language "C"
 kind "SharedLib"
-targetdir ("../../bin/install" .. suffix)
+local suf
+configuration {"x32"}
+	suf = "_x86"
+configuration "x64"		
+	suf = "_x64"
+configuration {"x64", "debug"}
+	suf = "_x64_debug"
+configuration {"x64", "release"}
+	suf = "_x64_release" 
+configuration {"x32", "debug"}
+	suf = "_x86_debug"
+configuration{}
+targetdir ("../../bin/install" .. suf)
+targetname ("sdl" .. suf)
+targetsuffix ""
 objdir "../../bin/obj"
 includedirs {
 	"include/",
