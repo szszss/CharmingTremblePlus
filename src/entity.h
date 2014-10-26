@@ -8,49 +8,63 @@
 #define FOREACH_END     }}
 
 //--------Entity
-struct implEntityPrototype 
+/*struct implEntityPrototype 
 {
 	void* (*create)(World&,float,float,...);
 	int (*update)(void*,World&);
 	void (*render)(void*,World&);
 	void (*destroy)(void*,World&,int);
-};
-struct implEntity 
+};*/
+class Entity 
 {
-	EntityPrototype* prototype;
+public:
+	Entity(World& world,float x,float y);
 	LinkedList *attributeList;
 	float posX;
 	float posY;
+	int update(World& world);
+	void render(World& world);
+	void destroy(World& world,int cause);
 };
 //--------Entity--EntityBlock
-struct implEntityBlockPrototype 
+/*struct implEntityBlockPrototype 
 {
 	EntityPrototype base;
 	void (*onStep)(void*,World&,EntityPlayer*,BOOL,int);
 	void (*onLeave)(void*,World&,EntityPlayer*);
 	//void* (*onBreak)(World&,EntityPlayer*);
-};
-struct implEntityBlock 
+};*/
+class EntityBlock : public Entity
 {
-	Entity base;
+public:
 	long depthLevel;
 	unsigned long stepped;
 	Texture *texture;
 	byte width;
+	void onStep(World& world,EntityPlayer& player,BOOL first,int last);
+	void onLeave(World& world,EntityPlayer& player);
 };
-//--------Entity--EntityBlock-EntityBlockBonus
-struct implEntityBlockBonus 
+//--------Entity--EntityBlock-EntityBlockXXX
+class EntityBlockMossy : public EntityBlock
 {
-	EntityBlock base;
+public:
+	byte bonusType; //Believe me, this byte even DOSEN'T take space. Do you know why?
+	int bonusInNumber;
+	float bounsInFactor;
+	void* bounsPointer;
+};
+class EntityBlockBrick : public EntityBlock
+{
+public:
 	byte bonusType; //Believe me, this byte even DOSEN'T take space. Do you know why?
 	int bonusInNumber;
 	float bounsInFactor;
 	void* bounsPointer;
 };
 //--------Entity--EntityPlayer
-struct implEntityPlayer
+class EntityPlayer : public Entity
 {
-	Entity base;
+public:
 	byte id;
 	int life;
 	long long score; //尽管玩到40亿分有些不太可能,但还是多多益善吧!别在乎那4byte的内存了.
@@ -70,13 +84,13 @@ struct implEntityPlayer
 
 int InitEntities();
 
-void EntityDestroy(void* entity,World& world,int cause);
+void EntityDestroy(World& world,int cause);
 /*额外的附加参数:(byte)id - 玩家ID*/
 void* EntityPlayerCreate(World& world,float x,float y,...);
-int EntityPlayerUpdate(void* entity,World& world);
-void EntityPlayerRender(void* entity,World& world);
-void EntityPlayerDestroy(void* entity,World& world,int cause);
-void EntityPlayerLifeChange(void* entity,World& world,int value);
+int EntityPlayerUpdate(World& world);
+void EntityPlayerRender(World& world);
+void EntityPlayerDestroy(World& world,int cause);
+void EntityPlayerLifeChange(World& world,int value);
 /*额外的附加参数:(byte)width - 宽度,(uint32)depth - 深度*/
 void* EntityBlockCreate(World& world,float x,float y,...);
 int EntityBlockUpdate(void* entity,World& world);
