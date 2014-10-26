@@ -58,7 +58,7 @@ static GLuint quicklyRenderList[20]={0};
 static int windowWidth;
 static int windowHeight;
 
-extern World* theWorld;
+extern World *theWorld;
 extern unsigned long long tickTime;
 
 using namespace std;
@@ -206,7 +206,7 @@ int RE_Render()
 	glTranslatef(0.0f, 0.0f, -42);
 	if(theWorld!=NULL)
 	{
-		WorldRender(theWorld);
+		theWorld->Render();
 	}
 	RE_CheckGLError(RE_STAGE_AFTER_DRAW_3D);
 	glDisable(GL_DEPTH_TEST);

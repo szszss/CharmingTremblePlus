@@ -24,18 +24,18 @@ extern PMD_Animation *animationStand;
 int CallbackDestroyEntity( void* entity )
 {
 	EntityPrototype* p = ((Entity*)entity)->prototype;
-	p->destroy(entity,theWorld,0);
+	p->destroy(entity,*theWorld,0);
 	return 0;
 }
 
-void EntityDestroy(void* entity,World* world,int cause)
+void EntityDestroy(void* entity,World& world,int cause)
 {
 	Entity* ent = (Entity*)entity;
 	LinkedListDestory(ent->attributeList,AttributeDestroyCallback);
 	free_s(entity);
 }
 
-void* EntityPlayerCreate(World *world,float x,float y, ...)
+void* EntityPlayerCreate(World& world,float x,float y, ...)
 {
 	va_list args;
 	EntityPlayer *player = (EntityPlayer*)malloc_s(sizeof(EntityPlayer));
@@ -65,7 +65,7 @@ void* EntityPlayerCreate(World *world,float x,float y, ...)
 	return player;
 }
 
-int EntityPlayerUpdate(void* entity,World* world)
+int EntityPlayerUpdate(void* entity,World& world)
 {
 	unsigned char operate;
 	EntityPlayer *player = (EntityPlayer*)entity;
@@ -177,7 +177,7 @@ int EntityPlayerUpdate(void* entity,World* world)
 	return 0;
 }
 
-void EntityPlayerRender(void* entity,World* world)
+void EntityPlayerRender(void* entity,World& world)
 {
 	static Texture *texture = NULL;
 	EntityPlayer *player = (EntityPlayer*)entity;
@@ -204,24 +204,24 @@ void EntityPlayerRender(void* entity,World* world)
 	glPopMatrix();
 }
 
-void EntityPlayerDestroy(void* entity,World* world,int cause)
+void EntityPlayerDestroy(void* entity,World& world,int cause)
 {
 	EntityPlayer *player = (EntityPlayer*)entity;
 	PMD_ModelInstanceDestroy(player->modelInstance);
 	EntityDestroy(entity,world,cause);
 }
 
-void EntityPlayerLifeChange( void* entity,World* world,int value )
+void EntityPlayerLifeChange( void* entity,World& world,int value )
 {
 	EntityPlayer *player = (EntityPlayer*)entity;
 	player->life+=value;
 	if(player->life<=0)
 	{
-		world->state=WSTATE_GAMEOVERING;
+		world.state=WSTATE_GAMEOVERING;
 	}
 }
 
-void EntityBlockCreate_Do(World *world,float x,float y,EntityBlock *block,va_list args,char *texture,EntityPrototype *prototype)
+void EntityBlockCreate_Do(World &world,float x,float y,EntityBlock *block,va_list args,char *texture,EntityPrototype *prototype)
 {
 	block->base.posX=x;
 	block->base.posY=y;
@@ -233,7 +233,7 @@ void EntityBlockCreate_Do(World *world,float x,float y,EntityBlock *block,va_lis
 	block->depthLevel=va_arg(args, unsigned long);
 }
 
-void* EntityBlockCreate(World *world,float x,float y, ...)
+void* EntityBlockCreate(World &world,float x,float y, ...)
 {
 	va_list args;
 	EntityBlock *block = (EntityBlock*)malloc_s(sizeof(EntityBlock));
@@ -243,7 +243,7 @@ void* EntityBlockCreate(World *world,float x,float y, ...)
 	return block;
 }
 
-void* EntityBlockBrickCreate( World* world,float x,float y,... )
+void* EntityBlockBrickCreate( World& world,float x,float y,... )
 {
 	va_list args;
 	EntityBlock *block = (EntityBlock*)malloc_s(sizeof(EntityBlockBonus));
@@ -257,7 +257,7 @@ void* EntityBlockBrickCreate( World* world,float x,float y,... )
 	return block;
 }
 
-void* EntityBlockMossyCreate( World* world,float x,float y,... )
+void* EntityBlockMossyCreate( World& world,float x,float y,... )
 {
 	va_list args;
 	EntityBlock *block = (EntityBlock*)malloc_s(sizeof(EntityBlockBonus));
@@ -271,11 +271,11 @@ void* EntityBlockMossyCreate( World* world,float x,float y,... )
 	return block;
 }
 
-int EntityBlockUpdate(void* entity,World* world)
+int EntityBlockUpdate(void* entity,World& world)
 {
 	EntityBlock *block = (EntityBlock*)entity;
 	float widthLeft,widthRight,temp;
-	block->base.posY+=world->upSpeed;
+	block->base.posY+=world.upSpeed;
 	if(block->base.posY>20)
 	{
 		return -1;
@@ -324,7 +324,7 @@ int EntityBlockUpdate(void* entity,World* world)
 	return 0;
 }
 
-void EntityBlockRender(void* entity,World* world)
+void EntityBlockRender(void* entity,World& world)
 {
 	EntityBlock *block = (EntityBlock*)entity;
 	int width = block->width;
@@ -344,7 +344,7 @@ void EntityBlockRender(void* entity,World* world)
 	glPopMatrix();
 }
 
-void EntityBlockOnStep( void* entity,World* world,EntityPlayer* player,BOOL first,int last )
+void EntityBlockOnStep( void* entity,World& world,EntityPlayer* player,BOOL first,int last )
 {
 	EntityBlock *block = (EntityBlock*)entity;
 	long i = block->depthLevel - player->maxDepthLevel;
@@ -365,12 +365,12 @@ void EntityBlockOnStep( void* entity,World* world,EntityPlayer* player,BOOL firs
 	GameUpdateMaxScore(player->score);
 }
 
-void EntityBlockOnLeave( void* entity,World* world,EntityPlayer* player )
+void EntityBlockOnLeave( void* entity,World& world,EntityPlayer* player )
 {
 	//Do nothing
 }
 
-void EntityBlockOnStepMoreScore( void* entity,World* world,EntityPlayer* player,BOOL first,int last )
+void EntityBlockOnStepMoreScore( void* entity,World& world,EntityPlayer* player,BOOL first,int last )
 {
 	EntityBlockBonus* block = (EntityBlockBonus*)entity;
 	long long oldScore = player->score;
@@ -392,14 +392,14 @@ void EntityBlockOnStepMoreScore( void* entity,World* world,EntityPlayer* player,
 	GameUpdateMaxScore(player->score);
 }
 
-void EntityBlockOnStepSlow(void* entity,World* world,EntityPlayer* player,BOOL first,int last)
+void EntityBlockOnStepSlow(void* entity,World& world,EntityPlayer* player,BOOL first,int last)
 {
 	EntityBlock* block = (EntityBlock*)entity;
 	EntityBlockOnStep(entity,world,player,first,last);
 	AttributeAddOrExtend(world,(Entity*)player,&attributeMossySlow);
 }
 
-void EntityBlockOnStepBreak(void* entity,World* world,EntityPlayer* player,BOOL first,int last)
+void EntityBlockOnStepBreak(void* entity,World& world,EntityPlayer* player,BOOL first,int last)
 {
 	EntityBlockBonus* block = (EntityBlockBonus*)entity;
 	EntityBlockOnStep(entity,world,player,first,last);

@@ -21,7 +21,7 @@ int InitAttributes()
 	return 0;
 }
 
-BOOL AttributeAddOnly(World *world,Entity *entity,Attribute *attribute)
+BOOL AttributeAddOnly(World &world,Entity *entity,Attribute *attribute)
 {
 	
 	AttributeInstance *attributeInstance = AttributeGet(entity,attribute);
@@ -30,7 +30,7 @@ BOOL AttributeAddOnly(World *world,Entity *entity,Attribute *attribute)
 	return AttributeAddDo(world,entity,attribute);
 }
 
-static BOOL AttributeAddDo(World *world,Entity *entity,Attribute *attribute)
+static BOOL AttributeAddDo(World &world,Entity *entity,Attribute *attribute)
 {
 	BOOL shouldKeep;
 	AttributeInstance *attributeInstance = (AttributeInstance*)malloc_s(sizeof(AttributeInstance));
@@ -46,7 +46,7 @@ static BOOL AttributeAddDo(World *world,Entity *entity,Attribute *attribute)
 	return shouldKeep;
 }
 
-BOOL AttributeAddOrExtend(World *world,Entity *entity,Attribute *attribute)
+BOOL AttributeAddOrExtend(World &world,Entity *entity,Attribute *attribute)
 {
 	AttributeInstance *attributeInstance = AttributeGet(entity,attribute);
 	if(attributeInstance!=NULL)
@@ -57,7 +57,7 @@ BOOL AttributeAddOrExtend(World *world,Entity *entity,Attribute *attribute)
 	return AttributeAddDo(world,entity,attribute);
 }
 
-BOOL AttributeExtendOnly(World *world,Entity *entity,Attribute *attribute)
+BOOL AttributeExtendOnly(World &world,Entity *entity,Attribute *attribute)
 {
 	AttributeInstance *attributeInstance = AttributeGet(entity,attribute);
 	if(attributeInstance == NULL)
@@ -83,7 +83,7 @@ AttributeInstance* AttributeGet(Entity *entity,Attribute *attribute)
 	return NULL;
 }
 
-void AttributeUpdate(World *world,Entity *entity)
+void AttributeUpdate(World &world,Entity *entity)
 {
 	LinkedList *linkedList = entity->attributeList;
 	LinkedListIterator *iterator = NULL;
@@ -109,7 +109,7 @@ void AttributeUpdate(World *world,Entity *entity)
 	}
 }
 
-void AttributeRender(World *world,Entity *entity)
+void AttributeRender(World &world,Entity *entity)
 {
 	LinkedList *linkedList = entity->attributeList;
 	LinkedListIterator *iterator = NULL;
@@ -126,27 +126,27 @@ int AttributeDestroyCallback(void *attributeInstance)
 	return 0;
 }
 
-static BOOL AttributeDefaultOnAdd(World *world,Entity *entity,AttributeInstance *attributeInstance)
+static BOOL AttributeDefaultOnAdd(World &world,Entity *entity,AttributeInstance *attributeInstance)
 {
 	attributeInstance->lastLife = attributeInstance->attribute->defaultLife;
 	return TRUE;
 }
-static void AttributeDefaultOnExtend(World *world,Entity *entity,AttributeInstance *attributeInstance)
+static void AttributeDefaultOnExtend(World &world,Entity *entity,AttributeInstance *attributeInstance)
 {
 	attributeInstance->lastLife = attributeInstance->attribute->defaultLife;
 }
-static BOOL AttributeDefaultOnUpdate(World *world,Entity *entity,AttributeInstance *attributeInstance)
+static BOOL AttributeDefaultOnUpdate(World &world,Entity *entity,AttributeInstance *attributeInstance)
 {
 	return TRUE;
 }
-static void AttributeDefaultOnRender(World *world,Entity *entity,AttributeInstance *attributeInstance)
+static void AttributeDefaultOnRender(World &world,Entity *entity,AttributeInstance *attributeInstance)
 {
 }
-static void AttributeDefaultOnExpire(World *world,Entity *entity,AttributeInstance *attributeInstance)
+static void AttributeDefaultOnExpire(World &world,Entity *entity,AttributeInstance *attributeInstance)
 {
 }
 
-static BOOL AttributeMossySlowOnUpdate(World *world,Entity *entity,AttributeInstance *attributeInstance)
+static BOOL AttributeMossySlowOnUpdate(World &world,Entity *entity,AttributeInstance *attributeInstance)
 {
 	EntityPlayer* player = (EntityPlayer*)entity;
 	if(player->landed && ((attributeInstance->lastLife) < (attributeInstance->attribute->defaultLife-5)))

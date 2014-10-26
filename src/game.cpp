@@ -81,9 +81,12 @@ void GameMainLoop()
 		SDL_Delay(1);
 	}
 	LoggerInfo("Game main loop broke.");
-	WorldEnd(theWorld);
-	WorldDestory(theWorld);
-	theWorld=NULL;
+	if(theWorld!=NULL)
+	{
+		theWorld->End();
+		theWorld->Destory();
+		theWorld=NULL;
+	}
 }
 
 int Update()
@@ -100,7 +103,7 @@ int Update()
 		IN_UpdateInput(); //处理输入
 		if(theWorld!=NULL)
 		{
-			WorldUpdate(theWorld); //更新世界
+			theWorld->Update(); //更新世界
 		}
 	}
 	Gui_Update(theWorld); //更新界面
@@ -159,7 +162,7 @@ void GameClose()
 	LoggerInfo("Closing game");
 	Gui_Close();
 	if(theWorld!=NULL)
-		WorldDestory(theWorld);
+		theWorld->Destory();
 	IN_DestroyInput();
 	RE_DestroyWindow();
 	PMD_Close();

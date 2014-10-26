@@ -38,7 +38,7 @@
 typedef unsigned char byte;
 typedef unsigned long Hash;
 
-typedef struct implWorld                World;              //游戏世界
+        class                           World;              //游戏世界
 typedef struct implAttribute            Attribute;          //属性
 typedef struct implAttributeInstance    AttributeInstance;  //属性实例
 typedef struct implEntityPrototype      EntityPrototype;    //实体原型
