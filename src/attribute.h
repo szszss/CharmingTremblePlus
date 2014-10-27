@@ -4,6 +4,7 @@
 class Attribute
 {
 public:
+	Attribute() {lastLife = 0;  elapseTime = 0; dataBits = 0L;};
 	/*当一个新的属性被添加到实体上时触发.返回值为是否同意添加.*/
 	virtual BOOL OnAdd(World& world, Entity* entity) { lastLife = GetDefaultLife(); return TRUE; };
 	/*当一个已有属性被延续时触发.*/
@@ -15,9 +16,9 @@ public:
 	/*属性消除时引发.*/
 	virtual void OnExpire(World& world, Entity* entity) {};
 	virtual int GetDefaultLife() { return 1; };
-	unsigned long lastLife = 0;
-	unsigned long elapseTime = 0;
-	long long dataBits = 0L;
+	long lastLife;
+	long elapseTime;
+	long long dataBits;
 };
 
 class AttributeMossySlow : public Attribute

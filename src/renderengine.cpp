@@ -48,6 +48,7 @@ PFNGLLINKPROGRAMPROC glLinkProgram = NULL;
 PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation = NULL;
 PFNGLUSEPROGRAMPROC glUseProgram = NULL;
 PFNGLUNIFORM3FPROC glUniform3f = NULL;
+PFNGLUNIFORM4FPROC glUniform4f = NULL;
 PFNGLUNIFORM1FPROC glUniform1f = NULL;
 PFNGLUNIFORM1IPROC glUniform1i = NULL;
 
@@ -66,6 +67,7 @@ static GLuint programBackground = 0;
 static GLint programBackgroundResolution;
 static GLint programBackgroundGlobalTime;
 static GLint programBackgroundChannel0;
+static GLint programBackgroundSkyColor;
 
 extern World *theWorld;
 extern unsigned long long tickTime;
@@ -75,8 +77,8 @@ using namespace std;
 int RE_InitWindow(int width,int height)
 {
 	int result;
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE,8);
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,8);
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,8);
@@ -92,9 +94,9 @@ int RE_InitWindow(int width,int height)
 	//glfwMakeContextCurrent(window);
 	if(glContext==NULL)
 	{
-		GameCrash("Initialized opengl(3.0) failed.");
+		GameCrash("Initialized opengl(2.1) failed.");
 	}
-	LoggerInfo("OpenGL(3.0) initialized");
+	LoggerInfo("OpenGL(2.1) initialized");
 	SDL_GL_SetSwapInterval(1);
 	RE_Reshape(width,height);
 	if(RE_InitQuicklyRender())
@@ -196,17 +198,17 @@ int RE_Render()
 	//------------------一些处理-------------------
 	//RE_UpdateTextTextureCache();
 	//-------------------绘制背景------------------
-	glClearColor(RE_CLEAR_COLOR); //静怡的天蓝色
+	glClearColor(RE_CLEAR_COLOR); //静怡的天蓝色 vec3(0.6,0.71,0.75)
 	glClearDepth(1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //清理缓冲区
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(0, 1.0, -1.0, 0.0, 0.5, 10.0); //将投影矩阵放置在第四象限
+	glOrtho(0, 800.0, -600.0, 0.0, 0.5, 10.0);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glTranslatef(0.0f, 0.0f, -1.0f);
 	glEnable(GL_TEXTURE_2D);
-	//RE_RenderBackground(2.0f / 21.0f, 0.1f / 15.9f, 11.0f / 21.0f, 16.0f / 16.0f);
+	RE_RenderBackground(2.0f / 21.0f, 0.1f / 15.9f, 400.0f/WINDOW_WIDTH_FLOAT, 600.0f/WINDOW_HEIGHT_FLOAT);
 	glDisable(GL_TEXTURE_2D);
 	glClearDepth(1.0f);
 	glClear(GL_DEPTH_BUFFER_BIT);
@@ -341,11 +343,25 @@ unsigned int RE_ProcessRawTexture( byte* rawData,int color,int format,unsigned l
 	//GL_RGBA
 	gluBuild2DMipmaps(GL_TEXTURE_2D,color,width,height,format,GL_UNSIGNED_BYTE, rawData);
 	//glTexImage2D(GL_TEXTURE_2D, 0, color, width, height, 0, format, GL_UNSIGNED_BYTE, rawData);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	//glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_BLEND); //诡异的反色!
+	RE_CheckGLError(RE_STAGE_AFTER_PROCESS_TEXTURE);
+	return texture;
+}
+
+unsigned int RE_ProcessRawTextureWithoutMipmap(byte* rawData,int color,int format,unsigned long width,unsigned long height)
+{
+	GLuint texture;
+	RE_CheckGLError(RE_STAGE_BEFORE_PROCESS_TEXTURE);
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	//GL_RGBA
+	glTexImage2D(GL_TEXTURE_2D, 0, color, width, height, 0, format, GL_UNSIGNED_BYTE, rawData);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	RE_CheckGLError(RE_STAGE_AFTER_PROCESS_TEXTURE);
 	return texture;
 }
@@ -714,6 +730,7 @@ int RE_InitShader()
 	glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC)SDL_GL_GetProcAddress("glGetUniformLocation");
 	glUseProgram = (PFNGLUSEPROGRAMPROC)SDL_GL_GetProcAddress("glUseProgram");
 	glUniform3f = (PFNGLUNIFORM3FPROC)SDL_GL_GetProcAddress("glUniform3f");
+	glUniform4f = (PFNGLUNIFORM4FPROC)SDL_GL_GetProcAddress("glUniform4f");
 	glUniform1f = (PFNGLUNIFORM1FPROC)SDL_GL_GetProcAddress("glUniform1f");
 	glUniform1i = (PFNGLUNIFORM1IPROC)SDL_GL_GetProcAddress("glUniform1i");
 
@@ -728,6 +745,7 @@ int RE_InitShader()
 		programBackgroundResolution = glGetUniformLocation(programBackground, "iResolution");
 		programBackgroundGlobalTime = glGetUniformLocation(programBackground, "iGlobalTime");
 		programBackgroundChannel0 = glGetUniformLocation(programBackground, "iChannel0");
+		programBackgroundSkyColor = glGetUniformLocation(programBackground, "skyColor");
 		
 		if (RE_CheckGLError(RE_STAGE_CREATING_PROGRAM) == GL_NO_ERROR)
 		{
@@ -749,10 +767,20 @@ void RE_RenderBackground(float x, float y, float width, float height)
 	RE_BindTexture(noissyTex);
 	glColor4f(1.0, 1.0, 1.0, 1.0);
 	glUseProgram(programBackground);
-	glUniform3f(programBackgroundResolution, (width - x)*windowWidth, (height - y)*windowHeight, 0);
+	glUniform3f(programBackgroundResolution, (width)*windowWidth, (height)*windowHeight, 1.0f);
 	glUniform1f(programBackgroundGlobalTime, tickTime*WINDOW_FRAME / 1000.0f);
 	glUniform1i(programBackgroundChannel0, 0);
-	RE_DrawRectWithTexture(x, y, width, height, 0, 0, 1, 1);
+	glUniform4f(programBackgroundSkyColor, RE_CLEAR_COLOR);
+	//RE_DrawRectWithTexture(x, y, width, height, 0, 0, 1, 1);
+	//width*=2.0f;
+	//height*=2.0f;
+	y = -y;
+	glBegin(GL_QUADS);
+	glTexCoord2f(1,0);glVertex3f((x+width)*WINDOW_WIDTH_FLOAT,(y-height)*WINDOW_HEIGHT_FLOAT,0);
+	glTexCoord2f(1, 1); glVertex3f((x + width)*WINDOW_WIDTH_FLOAT, y*WINDOW_HEIGHT_FLOAT, 0);
+	glTexCoord2f(0,1); glVertex3f(x*WINDOW_WIDTH_FLOAT, y*WINDOW_HEIGHT_FLOAT, 0);
+	glTexCoord2f(0, 0); glVertex3f(x*WINDOW_WIDTH_FLOAT, (y - height)*WINDOW_HEIGHT_FLOAT, 0);
+	glEnd();
 	glUseProgram(0);
 }
 

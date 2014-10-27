@@ -125,6 +125,18 @@ EntityPlayer::EntityPlayer(World& world, float x, float y, byte playerId) : Enti
 	this->id = playerId;
 	this->life = 5;
 	this->score = 0;
+	this->speedX = 0;
+	this->speedY = 0;
+	this->speedFactorX = 1;
+	this->speedFactorY = 1;
+	this->maxDepthLevel = 0;
+	this->left = FALSE;
+	this->right = FALSE;
+	this->up = FALSE;
+	this->down = FALSE;
+	this->jump = FALSE;
+	this->landed = FALSE;
+	this->modelInstance = NULL;
 }
 
 int EntityPlayer::Update()

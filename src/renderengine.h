@@ -61,6 +61,7 @@ void RE_SetMaterial(float* diffuse,float* ambient,float* specular,float* shinine
 #define RE_ClearMaterial() RE_SetMaterial(0,0,0,0);
 /*处理一个正在载入的纹理*/
 unsigned int RE_ProcessRawTexture(byte* rawData,int color,int format,unsigned long width,unsigned long height);
+unsigned int RE_ProcessRawTextureWithoutMipmap(byte* rawData,int color,int format,unsigned long width,unsigned long height);
 /*卸载一个纹理对象,注意它只负责卸载OpenGL内部的纹理对象,纹理(Texture)的释放仍需要手动完成*/
 void RE_UnloadTexture(unsigned int texture);
 /*检查OpenGL内部错误,注意只有在Debug模式下才会检查每一个错误,Release模式下只有Rendering阶段才会进行检查.这是因为glGetError的开销很大.*/

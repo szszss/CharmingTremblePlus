@@ -113,6 +113,36 @@ Texture* RM_LoadTexture( char* imageFile )
 	return texture;
 }
 
+Texture* RM_LoadTextureWithoutMipmap(char* imageFile)
+{
+	static char suffix[]={0,0,0,0,0};
+	Texture* texture = NULL;
+	int width;
+	int height;
+	int comp;
+	stbi_uc *rawBytes = stbi_load(imageFile,&width,&height,&comp,STBI_rgb_alpha);
+	if(rawBytes==NULL)
+	{
+		LoggerWarn("Texture [ %s ] can't be loaded. Reason: %s",imageFile,stbi_failure_reason());
+	}
+	if(comp<3)
+	{
+		LoggerWarn("Texture [ %s ] can't be loaded. Reason: Error comp",imageFile);
+	}
+	RM_ReverseRawData(rawBytes,width,height,comp==4?4:3);
+	texture = (Texture*)malloc_s(sizeof(Texture));
+	texture->width=width;
+	texture->height=height;
+	texture->id=RE_ProcessRawTextureWithoutMipmap(rawBytes,
+		comp==4?GL_RGBA8:GL_RGB8,
+		comp==4?GL_RGBA:GL_RGB,
+		width,height);
+	stbi_image_free(rawBytes);
+	HashTreeAdd(textureHT,imageFile,texture);
+	LoggerInfo("A texture without mipmap has been loaded : %s",imageFile);
+	return texture;
+}
+
 /*Texture* RM_LoadPNG( char* imageFile )
 {
 	Texture* texture = NULL;

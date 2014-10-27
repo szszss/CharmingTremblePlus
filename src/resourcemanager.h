@@ -6,3 +6,4 @@ int RM_InitResourceManager();
 int RM_Close();
 Texture* RM_GetTexture(char* imageFile);
 Texture* RM_LoadTexture(char* imageFile);
+Texture* RM_LoadTextureWithoutMipmap(char* imageFile);

@@ -12,13 +12,13 @@ World::World(wchar_t* playerName, long seed, enum WorldType type, enum WorldDiff
 {
 	//World &world = (World&)malloc_s(sizeof(World));
 	int i;
-	playerName=playerName;
+	this->playerName=playerName;
 	for(i=0;i<32;i++)
 	{
 		players[i] = NULL;
 	}
 	//world->score=0;
-	seed=seed;
+	this->seed=seed;
 	tick=0;
 	depth=0;
 	depthLevel=0;
@@ -178,6 +178,6 @@ void World::Render()
 void World::GameOver()
 {
 	state=WSTATE_GAMEOVERED;
-	RankCreate(playerName,players[0]->score);
+	RankCreate(playerName==NULL?L"":playerName,players[0]->score);
 	RankWriteOut();
 }

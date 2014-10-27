@@ -7,8 +7,6 @@
 #define FOREACH_PLAYERS(player,pWorld) {EntityPlayer *player = NULL;int _loopVar_=0;while((player=pWorld->players[_loopVar_++])!=NULL){
 #define FOREACH_END     }}
 
-using namespace std;
-
 //--------Entity
 /*struct implEntityPrototype 
 {
@@ -43,18 +41,18 @@ public:
 	byte id;
 	int life;
 	long long score; //尽管玩到40亿分有些不太可能,但还是多多益善吧!别在乎那4byte的内存了.
-	float speedX = 0;
-	float speedY = 0;
-	float speedFactorX = 1;
-	float speedFactorY = 1;
-	long maxDepthLevel = 0;
-	BOOL left = FALSE;
-	BOOL right = FALSE;
-	BOOL up = FALSE;
-	BOOL down = FALSE;
-	BOOL jump = FALSE;
-	BOOL landed = FALSE;
-	PMD_ModelInstance *modelInstance = NULL;
+	float speedX;
+	float speedY;
+	float speedFactorX;
+	float speedFactorY;
+	long maxDepthLevel;
+	BOOL left;
+	BOOL right;
+	BOOL up;
+	BOOL down;
+	BOOL jump;
+	BOOL landed;
+	PMD_ModelInstance *modelInstance;
 	int Update();
 	void Render();
 	void Destroy(int cause);
@@ -91,7 +89,7 @@ public:
 	EntityBlockMossy(World& world, float x, float y, byte width, unsigned long depth);
 	void OnStep(EntityPlayer& player, BOOL first, int last);
 private:
-	float slowFactor = 2.0f;
+	float slowFactor;
 	Texture* GetTexture();
 };
 class EntityBlockBrick : public EntityBlock
@@ -100,7 +98,7 @@ public:
 	EntityBlockBrick(World& world, float x, float y, byte width, unsigned long depth);
 	void OnStep(EntityPlayer& player, BOOL first, int last);
 private:
-	float bounsFactor = 2.0f;
+	float bounsFactor;
 	Texture* GetTexture();
 };
 
