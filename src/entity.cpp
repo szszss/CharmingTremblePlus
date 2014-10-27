@@ -8,6 +8,7 @@
 #include "attribute.h"
 #include <stdarg.h>
 #include <stdlib.h>
+#include <typeinfo>
 
 /*EntityPrototype entityPlayerPrototype;
 EntityBlockPrototype entityBlockPrototype;
@@ -48,42 +49,83 @@ Entity::~Entity()
 	LinkedListDestory(this->attributeList, AttributeDestroyCallback);
 }
 
+void Entity::AddAttribute(Attribute* attribute)
+{
+	Attribute *attr = GetAttribute(typeid(attribute));
+	if (attr != NULL)
+	{
+		*attr = *attribute;
+		attr->OnExtend(*world, this);
+		delete(attribute);
+	}
+	else
+	{
+		BOOL shouldKeep = attribute->OnAdd(*world, this);
+		if (shouldKeep)
+			LinkedListAdd(attributeList, attribute);
+		else
+			delete(attribute);
+	}
+}
+
+Attribute* Entity::GetAttribute(const type_info& attrClass)
+{
+	LinkedList* linkedList = attributeList;
+	LinkedListIterator *iterator = NULL;
+	for (iterator = LinkedListGetIterator(linkedList); LinkedListIteratorHasNext(iterator);)
+	{
+		Attribute *attribute = (Attribute*)LinkedListIteratorGetNext(iterator);
+		if (attrClass == typeid(attribute))
+		{
+			return attribute;
+		}
+	}
+	return NULL;
+}
+
+void Entity::UpdateAttribute()
+{
+	LinkedList *linkedList = this->attributeList;
+	LinkedListIterator *iterator = NULL;
+	for (iterator = LinkedListGetIterator(linkedList); LinkedListIteratorHasNext(iterator);)
+	{
+		BOOL keepLive;
+		Attribute *attribute = (Attribute*)LinkedListIteratorGetNext(iterator);
+		if (attribute->lastLife == 0)
+			keepLive = FALSE;
+		else
+			keepLive = attribute->OnUpdate(*world, this);
+		if (!keepLive)
+		{
+			attribute->OnExpire(*world, this);
+			LinkedListIteratorDeleteCurrent(iterator);
+			delete(attribute);
+		}
+		else
+		{
+			attribute->lastLife--;
+			attribute->elapseTime++;
+		}
+	}
+}
+
+void Entity::RenderAttribute()
+{
+	LinkedList *linkedList = this->attributeList;
+	LinkedListIterator *iterator = NULL;
+	for (iterator = LinkedListGetIterator(linkedList); LinkedListIteratorHasNext(iterator);)
+	{
+		Attribute *attribute = (Attribute*)LinkedListIteratorGetNext(iterator);
+		attribute->OnRender(*world, this);
+	}
+}
+
 EntityPlayer::EntityPlayer(World& world, float x, float y, byte playerId) : Entity(world, x, y)
 {
 	this->id = playerId;
 	this->life = 5;
 	this->score = 0;
 }
-
-/*void* EntityPlayerCreate(World& world,float x,float y, ...)
-{
-	va_list args;
-	EntityPlayer *player = (EntityPlayer*)malloc_s(sizeof(EntityPlayer));
-	va_start(args,y);
-	player->base.posX=x;
-	player->base.posY=y;
-	player->base.attributeList=LinkedListCreate();
-	player->base.prototype=&entityPlayerPrototype;
-	player->left=FALSE;
-	player->right=FALSE;
-	player->up=FALSE;
-	player->down=FALSE;
-	player->jump=FALSE;
-	player->landed=FALSE;
-	player->maxDepthLevel=0;
-	player->speedX=0;
-	player->speedY=0;
-	player->speedFactorX=1.0f;
-	player->speedFactorY=1.0f;
-	player->life=5;
-	player->score=0;
-	//player->modelInstance=PMD_ModelInstanceCreate(PMD_LoadModel("model/koishi","koishi.pmd"));
-	//PMD_UseAnimation(player->modelInstance,animationRun);
-	player->modelInstance=NULL;
-	player->id=va_arg(args, byte);
-	va_end(args); 
-	return player;
-}*/
 
 int EntityPlayer::Update()
 {
@@ -93,7 +135,7 @@ int EntityPlayer::Update()
 	this->speedFactorX=1.0f;
 	this->speedFactorY = 1.0f;
 
-	AttributeUpdate(*world, this);
+	UpdateAttribute();
 
 	//获取操作队列
 	while((operate=IN_GetOperate())>200)
@@ -229,6 +271,7 @@ void EntityPlayer::Render()
 	{
 		PMD_ModelInstanceRender(player->modelInstance);
 	}
+	RenderAttribute();
 	glPopMatrix();
 }
 
@@ -281,7 +324,7 @@ int EntityBlock::Update()
 	{
 		return -1;
 	}
-	AttributeUpdate(*world,this);
+	UpdateAttribute();
 	temp=(float)(block->width)/2;
 	widthLeft=block->posX-temp;
 	widthRight=block->posX+temp;
@@ -342,6 +385,7 @@ void EntityBlock::Render()
 	glTranslatef(block->posX,block->posY,0);
 	RE_RenderCubeQuick(width);
 	RE_BindTexture(NULL);
+	RenderAttribute();
 	glPopMatrix();
 }
 
@@ -390,7 +434,7 @@ void EntityBlockMossy::OnStep(EntityPlayer& player,BOOL first,int last)
 {
 	EntityBlockMossy* block = this;
 	EntityBlock::OnStep(player, first, last);
-	AttributeAddOrExtend(*world,(Entity*)&player,&attributeMossySlow);
+	player.AddAttribute(new AttributeMossySlow());
 }
 
 /*void EntityBlockOnStepBreak(void* entity,World& world,EntityPlayer* player,BOOL first,int last)

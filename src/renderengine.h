@@ -15,6 +15,8 @@
 
 #define RE_STAGE_BEFORE_PROCESS_TEXTURE "Before processing texture"
 #define RE_STAGE_AFTER_PROCESS_TEXTURE "Processing texture"
+#define RE_STAGE_CREATING_SHADER "Creating shader"
+#define RE_STAGE_CREATING_PROGRAM "Creating program"
 
 #define RE_CLEAR_COLOR 0.345, 0.675, 1.0, 1.0
 
@@ -64,5 +66,7 @@ void RE_UnloadTexture(unsigned int texture);
 /*检查OpenGL内部错误,注意只有在Debug模式下才会检查每一个错误,Release模式下只有Rendering阶段才会进行检查.这是因为glGetError的开销很大.*/
 int RE_CheckGLError(char* stage);
 void RE_DrawText(wchar_t *text, float x, float y, float maxWidth);
+int RE_InitShader();
+void RE_RenderBackground(float x, float y, float width, float height);
 //void RE_DrawTextStatic(char* text,float x,float y,float width);
 //void RE_DrawTextVolatile(char* text,float x,float y,float width);

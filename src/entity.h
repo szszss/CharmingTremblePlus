@@ -7,6 +7,8 @@
 #define FOREACH_PLAYERS(player,pWorld) {EntityPlayer *player = NULL;int _loopVar_=0;while((player=pWorld->players[_loopVar_++])!=NULL){
 #define FOREACH_END     }}
 
+using namespace std;
+
 //--------Entity
 /*struct implEntityPrototype 
 {
@@ -27,6 +29,11 @@ public:
 	virtual int Update() { return 0; };
 	virtual void Render() {};
 	virtual void Destroy(int cause) {};
+	virtual void AddAttribute(Attribute* attribute);
+	virtual Attribute* GetAttribute(const type_info& attrClass);
+protected:
+	virtual void UpdateAttribute();
+	virtual void RenderAttribute();
 };
 //--------Entity--EntityPlayer
 class EntityPlayer : public Entity

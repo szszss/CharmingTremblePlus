@@ -38,25 +38,34 @@ void RE_RenderCubeDoCentre(float lx,float ly,float lz,float rx,float ry,float rz
 void RE_RenderCubeDoRight(float lx,float ly,float lz,float rx,float ry,float rz);
 void RE_DestroyQuicklyRender();
 void RE_DestroyFontRenderer();
-//TextTexture* RE_ProcessTextTexture(char* utf8Text,float maxWidth);
-//void RE_UpdateTextTextureCache();
 void RE_BindChar(wchar_t c);
+PFNGLCREATESHADEROBJECTARBPROC glCreateShader = NULL;
+PFNGLCOMPILESHADERARBPROC glCompileShader = NULL;
+PFNGLSHADERSOURCEARBPROC glShaderSource = NULL;
+PFNGLCREATEPROGRAMOBJECTARBPROC glCreateProgram = NULL;
+PFNGLATTACHSHADERPROC 	glAttachShader = NULL;
+PFNGLLINKPROGRAMPROC glLinkProgram = NULL;
+PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation = NULL;
+PFNGLUSEPROGRAMPROC glUseProgram = NULL;
+PFNGLUNIFORM3FPROC glUniform3f = NULL;
+PFNGLUNIFORM1FPROC glUniform1f = NULL;
+PFNGLUNIFORM1IPROC glUniform1i = NULL;
 
-//GLFWwindow* window = NULL;
 SDL_Window *window = NULL;
 static SDL_GLContext glContext = NULL;
-//static FT_Library library = NULL;
-//static FT_Face face = NULL;
 static byte *fontData = NULL;
 static stbtt_fontinfo fontInfo;
 static GLuint charTextures[sizeof(wchar_t) == 2 ? 256 : 4351];
 static stbtt_bakedchar *charInfo[sizeof(wchar_t) == 2 ? 256 : 4351];
 static BOOL fontRendering = FALSE;
-//static LinkedList *textTextureCache = NULL;
 static GLdouble aspect;
 static GLuint quicklyRenderList[20]={0};
 static int windowWidth;
 static int windowHeight;
+static GLuint programBackground = 0;
+static GLint programBackgroundResolution;
+static GLint programBackgroundGlobalTime;
+static GLint programBackgroundChannel0;
 
 extern World *theWorld;
 extern unsigned long long tickTime;
@@ -98,7 +107,7 @@ int RE_InitWindow(int width,int height)
 		GameCrash("Initialized Font renderer failed.");
 	}
 	LoggerInfo("Font renderer initialized");
-
+	RE_InitShader();
 	/*for (int w = 0; w < 256; w++)
 	{
 		RE_BindChar(w<<8);
@@ -186,10 +195,22 @@ int RE_Render()
 	static Texture* texture = NULL;
 	//------------------一些处理-------------------
 	//RE_UpdateTextTextureCache();
-	//-------------------绘制3D-------------------
-	glClearColor( RE_CLEAR_COLOR ); //静怡的天蓝色
+	//-------------------绘制背景------------------
+	glClearColor(RE_CLEAR_COLOR); //静怡的天蓝色
 	glClearDepth(1.0f);
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT ); //清理缓存
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //清理缓冲区
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(0, 1.0, -1.0, 0.0, 0.5, 10.0); //将投影矩阵放置在第四象限
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glTranslatef(0.0f, 0.0f, -1.0f);
+	glEnable(GL_TEXTURE_2D);
+	//RE_RenderBackground(2.0f / 21.0f, 0.1f / 15.9f, 11.0f / 21.0f, 16.0f / 16.0f);
+	glDisable(GL_TEXTURE_2D);
+	glClearDepth(1.0f);
+	glClear(GL_DEPTH_BUFFER_BIT);
+	//-------------------绘制3D-------------------
 	RE_CheckGLError(RE_STAGE_BEFORE_DRAW_3D);
 	glMatrixMode(GL_PROJECTION); //重设定投影矩阵
 	glLoadIdentity();
@@ -337,12 +358,12 @@ void RE_UnloadTexture( unsigned int texture )
 int RE_CheckGLError(char* stage)
 {
 	GLenum error;
-	#ifndef DEBUG
+	/*#ifndef DEBUG
 		if(stage!=RE_STAGE_FINISH)
 		{
 			return 0;
 		}
-	#endif
+	#endif*/
 	error = glGetError();
 	if(error!=GL_NO_ERROR)
 	{
@@ -661,6 +682,80 @@ void RE_BindChar(wchar_t c)
 	if (fontRendering == TRUE)
 		glBegin(GL_QUADS);
 	currentTexture = texture;
+}
+
+GLuint loadShader(char* file, GLenum shaderType)
+{
+	FILE *shaderFile = fopen(file, "r");
+	if (shaderFile == NULL)
+		return 0;
+	int length;
+	char** content = stb_stringfile(file, &length);
+	fclose(shaderFile);
+	GLuint shader = glCreateShader(shaderType);
+	if (shader == 0)
+		return 0;
+	glShaderSource(shader, 0, (const GLchar**)content, NULL);
+	glCompileShader(shader);
+	if (RE_CheckGLError(RE_STAGE_CREATING_SHADER) != GL_NO_ERROR)
+		return 0;
+	return shader;
+}
+
+int RE_InitShader()
+{
+	//Get function pointers.
+	glCreateShader = (PFNGLCREATESHADEROBJECTARBPROC)SDL_GL_GetProcAddress("glCreateShader");
+	glCompileShader = (PFNGLCOMPILESHADERARBPROC)SDL_GL_GetProcAddress("glCompileShader");
+	glShaderSource = (PFNGLSHADERSOURCEARBPROC)SDL_GL_GetProcAddress("glShaderSource");
+	glCreateProgram = (PFNGLCREATEPROGRAMOBJECTARBPROC)SDL_GL_GetProcAddress("glCreateProgram");
+	glAttachShader = (PFNGLATTACHSHADERPROC)SDL_GL_GetProcAddress("glAttachShader");
+	glLinkProgram = (PFNGLLINKPROGRAMPROC)SDL_GL_GetProcAddress("glLinkProgram");
+	glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC)SDL_GL_GetProcAddress("glGetUniformLocation");
+	glUseProgram = (PFNGLUSEPROGRAMPROC)SDL_GL_GetProcAddress("glUseProgram");
+	glUniform3f = (PFNGLUNIFORM3FPROC)SDL_GL_GetProcAddress("glUniform3f");
+	glUniform1f = (PFNGLUNIFORM1FPROC)SDL_GL_GetProcAddress("glUniform1f");
+	glUniform1i = (PFNGLUNIFORM1IPROC)SDL_GL_GetProcAddress("glUniform1i");
+
+	programBackground = glCreateProgram();
+	GLuint shaderBackgroundVert = loadShader("shader/cloud.vert", GL_VERTEX_SHADER);
+	GLuint shaderBackgroundFrag = loadShader("shader/cloud.frag", GL_FRAGMENT_SHADER);
+	if (shaderBackgroundVert != 0 && shaderBackgroundFrag != 0)
+	{
+		glAttachShader(programBackground, shaderBackgroundVert);
+		glAttachShader(programBackground, shaderBackgroundFrag);
+		glLinkProgram(programBackground);
+		
+		if (RE_CheckGLError(RE_STAGE_CREATING_PROGRAM) == GL_NO_ERROR)
+		{
+			glUseProgram(programBackground);
+			programBackgroundResolution = glGetUniformLocation(programBackground, "iResolution");
+			programBackgroundGlobalTime = glGetUniformLocation(programBackground, "iGlobalTime");
+			programBackgroundChannel0 = glGetUniformLocation(programBackground, "iChannel0");
+			glUseProgram(0);
+			LoggerInfo("Background shader loaded.");
+			return 0;
+		}
+	}
+	LoggerError("Failed to load background shader.");
+	return -1;
+}
+
+void RE_RenderBackground(float x, float y, float width, float height)
+{
+	static Texture* noissyTex = NULL;
+	if (programBackground == 0)
+		return;
+	if (noissyTex == NULL)
+		noissyTex = RM_GetTexture("image/cloudshader.png");
+	RE_BindTexture(noissyTex);
+	glColor4f(1.0, 1.0, 1.0, 1.0);
+	glUseProgram(programBackground);
+	glUniform3f(programBackgroundResolution, (width - x)*windowWidth, (height - y)*windowHeight, 0);
+	glUniform1f(programBackgroundGlobalTime, tickTime*WINDOW_FRAME / 1000.0f);
+	glUniform1i(programBackgroundChannel0, 0);
+	RE_DrawRectWithTexture(x, y, width, height, 0, 0, 1, 1);
+	glUseProgram(0);
 }
 
 //旧的字体渲染函数
