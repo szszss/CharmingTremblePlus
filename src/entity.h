@@ -4,7 +4,7 @@
 #include "pmd.h"
 
 //#define FOREACH_PLAYERS FOREACH_PLAYERS(player)
-#define FOREACH_PLAYERS(player) {EntityPlayer *player = NULL;int _loopVar_=0;while((player=world.players[_loopVar_++])!=NULL){
+#define FOREACH_PLAYERS(player,pWorld) {EntityPlayer *player = NULL;int _loopVar_=0;while((player=pWorld->players[_loopVar_++])!=NULL){
 #define FOREACH_END     }}
 
 //--------Entity
@@ -19,12 +19,39 @@ class Entity
 {
 public:
 	Entity(World& world,float x,float y);
+	~Entity();
 	LinkedList *attributeList;
+	World *world;
 	float posX;
 	float posY;
-	int update(World& world);
-	void render(World& world);
-	void destroy(World& world,int cause);
+	virtual int Update() { return 0; };
+	virtual void Render() {};
+	virtual void Destroy(int cause) {};
+};
+//--------Entity--EntityPlayer
+class EntityPlayer : public Entity
+{
+public:
+	EntityPlayer(World& world, float x, float y, byte playerId);
+	byte id;
+	int life;
+	long long score; //尽管玩到40亿分有些不太可能,但还是多多益善吧!别在乎那4byte的内存了.
+	float speedX = 0;
+	float speedY = 0;
+	float speedFactorX = 1;
+	float speedFactorY = 1;
+	long maxDepthLevel = 0;
+	BOOL left = FALSE;
+	BOOL right = FALSE;
+	BOOL up = FALSE;
+	BOOL down = FALSE;
+	BOOL jump = FALSE;
+	BOOL landed = FALSE;
+	PMD_ModelInstance *modelInstance = NULL;
+	int Update();
+	void Render();
+	void Destroy(int cause);
+	virtual void LifeChange(int value);
 };
 //--------Entity--EntityBlock
 /*struct implEntityBlockPrototype 
@@ -37,79 +64,38 @@ public:
 class EntityBlock : public Entity
 {
 public:
+	EntityBlock(World& world, float x, float y, byte width, unsigned long depth);
 	long depthLevel;
 	unsigned long stepped;
 	Texture *texture;
 	byte width;
-	void onStep(World& world,EntityPlayer& player,BOOL first,int last);
-	void onLeave(World& world,EntityPlayer& player);
+	int Update();
+	void Render();
+	//void Destroy(int cause);
+	virtual void OnStep(EntityPlayer& player, BOOL first, int last);
+	virtual void OnLeave(EntityPlayer& player);
+protected:
+	virtual Texture* GetTexture();
 };
 //--------Entity--EntityBlock-EntityBlockXXX
 class EntityBlockMossy : public EntityBlock
 {
 public:
-	byte bonusType; //Believe me, this byte even DOSEN'T take space. Do you know why?
-	int bonusInNumber;
-	float bounsInFactor;
-	void* bounsPointer;
+	EntityBlockMossy(World& world, float x, float y, byte width, unsigned long depth);
+	void OnStep(EntityPlayer& player, BOOL first, int last);
+private:
+	float slowFactor = 2.0f;
+	Texture* GetTexture();
 };
 class EntityBlockBrick : public EntityBlock
 {
 public:
-	byte bonusType; //Believe me, this byte even DOSEN'T take space. Do you know why?
-	int bonusInNumber;
-	float bounsInFactor;
-	void* bounsPointer;
-};
-//--------Entity--EntityPlayer
-class EntityPlayer : public Entity
-{
-public:
-	byte id;
-	int life;
-	long long score; //尽管玩到40亿分有些不太可能,但还是多多益善吧!别在乎那4byte的内存了.
-	float speedX;
-	float speedY;
-	float speedFactorX;
-	float speedFactorY;
-	long maxDepthLevel;
-	BOOL left;
-	BOOL right;
-	BOOL up;
-	BOOL down;
-	BOOL jump;
-	BOOL landed;
-	PMD_ModelInstance *modelInstance;
+	EntityBlockBrick(World& world, float x, float y, byte width, unsigned long depth);
+	void OnStep(EntityPlayer& player, BOOL first, int last);
+private:
+	float bounsFactor = 2.0f;
+	Texture* GetTexture();
 };
 
 int InitEntities();
-
-void EntityDestroy(World& world,int cause);
-/*额外的附加参数:(byte)id - 玩家ID*/
-void* EntityPlayerCreate(World& world,float x,float y,...);
-int EntityPlayerUpdate(World& world);
-void EntityPlayerRender(World& world);
-void EntityPlayerDestroy(World& world,int cause);
-void EntityPlayerLifeChange(World& world,int value);
-/*额外的附加参数:(byte)width - 宽度,(uint32)depth - 深度*/
-void* EntityBlockCreate(World& world,float x,float y,...);
-int EntityBlockUpdate(void* entity,World& world);
-void EntityBlockRender(void* entity,World& world);
-void EntityBlockOnStep(void* entity,World& world,EntityPlayer* player,BOOL first,int last);
-void EntityBlockOnLeave(void* entity,World& world,EntityPlayer* player);
-/*额外分数砖块 使用附加值:bounsInFactor 分数加成系数 bonusInNumber 分数加值 bonusType 算法(0为加分=基准分*系数+加值 非0为加分=(基准分+加值)*系数)*/
-void EntityBlockOnStepMoreScore(void* entity,World& world,EntityPlayer* player,BOOL first,int last);
-/*踩上去后减速*/
-void EntityBlockOnStepSlow(void* entity,World& world,EntityPlayer* player,BOOL first,int last);
-/*踩上去后坏掉*/
-void EntityBlockOnStepBreak(void* entity,World& world,EntityPlayer* player,BOOL first,int last);
-/*额外的附加参数:(byte)width - 宽度,(uint32)depth - 深度*/
-void* EntityBlockBrickCreate(World& world,float x,float y,...);
-/*额外的附加参数:(byte)width - 宽度,(uint32)depth - 深度*/
-void* EntityBlockMossyCreate(World& world,float x,float y,...);
-/*额外的附加参数:(byte)width - 宽度,(uint32)depth - 深度*/
-void* EntityBlockCobblestoneCreate(World& world,float x,float y,...);
-int EntityBlockCobblestoneUpdate(void* entity,World& world);
-
-
 int CallbackDestroyEntity(void* entity);

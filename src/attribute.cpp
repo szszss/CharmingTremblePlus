@@ -151,7 +151,7 @@ static BOOL AttributeMossySlowOnUpdate(World &world,Entity *entity,AttributeInst
 	EntityPlayer* player = (EntityPlayer*)entity;
 	if(player->landed && ((attributeInstance->lastLife) < (attributeInstance->attribute->defaultLife-5)))
 		return FALSE;
-	if(player->base.posY<-14.0f)
+	if(player->posY<-14.0f)
 		return FALSE;
 	player->speedFactorX *= 0.5f;
 	//player->speedFactorY *= 0.75

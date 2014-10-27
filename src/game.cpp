@@ -85,6 +85,7 @@ void GameMainLoop()
 	{
 		theWorld->End();
 		theWorld->Destory();
+		delete(theWorld);
 		theWorld=NULL;
 	}
 }
@@ -161,8 +162,11 @@ void GameClose()
 {
 	LoggerInfo("Closing game");
 	Gui_Close();
-	if(theWorld!=NULL)
+	if (theWorld != NULL)
+	{
 		theWorld->Destory();
+		delete(theWorld);
+	}	
 	IN_DestroyInput();
 	RE_DestroyWindow();
 	PMD_Close();

@@ -3,10 +3,10 @@
 #include "resourcemanager.h"
 #include "ranking.h"
 
-extern EntityPrototype entityPlayerPrototype;
+/*extern EntityPrototype entityPlayerPrototype;
 extern EntityBlockPrototype entityBlockPrototype;
 extern EntityBlockPrototype entityBlockBrickPrototype;
-extern EntityBlockPrototype entityBlockMossyPrototype;
+extern EntityBlockPrototype entityBlockMossyPrototype;*/
 
 World::World(wchar_t* playerName, long seed, enum WorldType type, enum WorldDifficulty difficulty)
 {
@@ -31,7 +31,7 @@ World::World(wchar_t* playerName, long seed, enum WorldType type, enum WorldDiff
 
 void World::Start()
 {
-	EntityBlock* block = (EntityBlock*)entityBlockPrototype.base.create(*this,0,-14,5,0);
+	EntityBlock* block = new EntityBlock(*this,0,-14,5,0);
 	int i;
 	for(i=0;i<32;i++)
 	{
@@ -48,7 +48,7 @@ void World::Start()
 
 	block->stepped=0xFFFFFFFF;
 	LinkedListAdd(blockList,block);
-	this->players[0] = (EntityPlayer*)EntityPlayerCreate(*this,0,-13,0);
+	this->players[0] = new EntityPlayer(*this,0,-13,0);
 	this->state=WSTATE_RUN;
 	LoggerInfo("World started");
 }
@@ -63,7 +63,7 @@ void World::End()
 	LinkedListDestory(blockList,CallbackDestroyEntity);
 	LinkedListDestory(powerupList,CallbackDestroyEntity);
 	LinkedListDestory(operateQueue,_DummyDelete);
-	FOREACH_PLAYERS(player)
+	FOREACH_PLAYERS(player,this)
 		CallbackDestroyEntity(player);
 	FOREACH_END
 	MTDestroy(randomGen);
@@ -77,7 +77,7 @@ void World::Destory()
 	//	return;
 	//free_s(world->player);
 	LoggerInfo("Destroying world");
-	delete(this);
+	//delete(this);
 	//free_s(world);
 	LoggerInfo("World destroyed");
 	//TODO:销毁操作队列
@@ -86,16 +86,15 @@ void World::Destory()
 void World::UpdateEntityList(LinkedList *list)
 {
 	LinkedListIterator *iterator;
-	void *entity;
-	EntityPrototype* p;
+	Entity *entity;
 	int result;
 	for(iterator=LinkedListGetIterator(list);LinkedListIteratorHasNext(iterator);)
 	{
-		entity = LinkedListIteratorGetNext(iterator);
-		p = ((Entity*)entity)->prototype;
-		if((result=p->update(entity,*this))<0)
+		entity = (Entity*)LinkedListIteratorGetNext(iterator);
+		if((result=entity->Update())<0)
 		{
-			p->destroy(entity,*this,result);
+			entity->Destroy(result);
+			delete(entity);
 			LinkedListIteratorDeleteCurrent(iterator);
 		}
 	}
@@ -123,14 +122,14 @@ void World::Update()
 			case 0:
 			case 1:
 			case 3:
-				block = (EntityBlock*)entityBlockBrickPrototype.base.create(*this,(float)x-9.5f,-16,length,depthLevel);
+				block = new EntityBlockBrick(*this,(float)x-9.5f,-16,length,depthLevel);
 				break;
 			case 4:
 			case 5:
-				block = (EntityBlock*)entityBlockMossyPrototype.base.create(*this,(float)x-9.5f,-16,length,depthLevel);
+				block = new EntityBlockMossy(*this, (float)x - 9.5f, -16, length, depthLevel);
 				break;
 			default:
-				block = (EntityBlock*)entityBlockPrototype.base.create(*this,(float)x-9.5f,-16,length,depthLevel);
+				block = new EntityBlock(*this, (float)x - 9.5f, -16, length, depthLevel);
 				break;
 			}
 			LinkedListAdd(blockList,block);
@@ -138,9 +137,8 @@ void World::Update()
 		}
 		UpdateEntityList(blockList);
 		UpdateEntityList(powerupList);
-		World &world = *this;
-		FOREACH_PLAYERS(player)
-		((Entity*)(player))->prototype->update(player,world);
+		FOREACH_PLAYERS(player, this)
+			player->Update();
 		FOREACH_END
 	}
 	depth+=upSpeed;
@@ -150,13 +148,11 @@ void World::Update()
 void World::RenderEntityList(LinkedList *list)
 {
 	LinkedListIterator *iterator;
-	void *entity;
-	EntityPrototype* p;
+	Entity *entity;
 	for(iterator=LinkedListGetIterator(list);LinkedListIteratorHasNext(iterator);)
 	{
-		entity = LinkedListIteratorGetNext(iterator);
-		p = ((Entity*)entity)->prototype;
-		p->render(entity,*this);
+		entity = (Entity*)LinkedListIteratorGetNext(iterator);
+		entity->Render();
 		//AttributeRender(world,(Entity*)entity);
 	}
 }
@@ -167,9 +163,8 @@ void World::Render()
 	{
 		RenderEntityList(blockList);
 		RenderEntityList(powerupList);
-		World &world = *this;
-		FOREACH_PLAYERS(player)
-		((Entity*)(player))->prototype->render(player,world);
+		FOREACH_PLAYERS(player, this)
+			player->Render();
 		//AttributeRender(world,(Entity*)player);
 		FOREACH_END
 	}

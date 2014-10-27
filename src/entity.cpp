@@ -9,11 +9,11 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
-EntityPrototype entityPlayerPrototype;
+/*EntityPrototype entityPlayerPrototype;
 EntityBlockPrototype entityBlockPrototype;
 EntityBlockPrototype entityBlockBrickPrototype;
 EntityBlockPrototype entityBlockMossyPrototype;
-EntityBlockPrototype entityBlockCobblestonePrototype;
+EntityBlockPrototype entityBlockCobblestonePrototype;*/
 
 extern unsigned long long tickTime;
 extern World *theWorld;
@@ -23,19 +23,39 @@ extern PMD_Animation *animationStand;
 
 int CallbackDestroyEntity( void* entity )
 {
-	EntityPrototype* p = ((Entity*)entity)->prototype;
-	p->destroy(entity,*theWorld,0);
+	Entity* p = ((Entity*)entity);
+	p->Destroy(0);
 	return 0;
 }
 
-void EntityDestroy(void* entity,World& world,int cause)
+/*void EntityDestroy(void* entity,World& world,int cause)
 {
 	Entity* ent = (Entity*)entity;
 	LinkedListDestory(ent->attributeList,AttributeDestroyCallback);
 	free_s(entity);
+}*/
+
+Entity::Entity(World& world, float x, float y)
+{
+	this->world = &world;
+	this->posX = x;
+	this->posY = y;
+	this->attributeList = LinkedListCreate();
 }
 
-void* EntityPlayerCreate(World& world,float x,float y, ...)
+Entity::~Entity()
+{
+	LinkedListDestory(this->attributeList, AttributeDestroyCallback);
+}
+
+EntityPlayer::EntityPlayer(World& world, float x, float y, byte playerId) : Entity(world, x, y)
+{
+	this->id = playerId;
+	this->life = 5;
+	this->score = 0;
+}
+
+/*void* EntityPlayerCreate(World& world,float x,float y, ...)
 {
 	va_list args;
 	EntityPlayer *player = (EntityPlayer*)malloc_s(sizeof(EntityPlayer));
@@ -63,18 +83,17 @@ void* EntityPlayerCreate(World& world,float x,float y, ...)
 	player->id=va_arg(args, byte);
 	va_end(args); 
 	return player;
-}
+}*/
 
-int EntityPlayerUpdate(void* entity,World& world)
+int EntityPlayer::Update()
 {
 	unsigned char operate;
-	EntityPlayer *player = (EntityPlayer*)entity;
 	char hTempMove = 0;
 	//恢复参数
-	player->speedFactorX=1.0f;
-	player->speedFactorY=1.0f;
+	this->speedFactorX=1.0f;
+	this->speedFactorY = 1.0f;
 
-	AttributeUpdate(world,(Entity*)entity);
+	AttributeUpdate(*world, this);
 
 	//获取操作队列
 	while((operate=IN_GetOperate())>200)
@@ -82,107 +101,116 @@ int EntityPlayerUpdate(void* entity,World& world)
 		switch(operate)
 		{
 		case INPUT_OPERATE_LEFT_DOWN:
-			hTempMove=(!hTempMove&&!player->left)?-1:0;
-			player->left=TRUE;
+			hTempMove = (!hTempMove&&!this->left) ? -1 : 0;
+			this->left = TRUE;
 			break;
 		case INPUT_OPERATE_RIGHT_DOWN:
-			hTempMove=(!hTempMove&&!player->right)?1:0;
-			player->right=TRUE;
+			hTempMove = (!hTempMove&&!this->right) ? 1 : 0;
+			this->right = TRUE;
 			break;
 		case INPUT_OPERATE_UP_DOWN:
-			player->up=TRUE;
+			this->up = TRUE;
 			break;
 		case INPUT_OPERATE_DOWN_DOWN:
-			player->down=TRUE;
+			this->down = TRUE;
 			break;
 		case INPUT_OPERATE_SPACE_DOWN:
-			player->jump=TRUE;
+			this->jump = TRUE;
 			break;
 		case INPUT_OPERATE_LEFT_UP:
-			player->left=FALSE;
+			this->left = FALSE;
 			break;
 		case INPUT_OPERATE_RIGHT_UP:
-			player->right=FALSE;
+			this->right = FALSE;
 			break;
 		case INPUT_OPERATE_UP_UP:
-			player->up=FALSE;
+			this->up = FALSE;
 			break;
 		case INPUT_OPERATE_DOWN_UP:
-			player->down=FALSE;
+			this->down = FALSE;
 			break;
 		case INPUT_OPERATE_SPACE_UP:
-			player->jump=FALSE;
+			this->jump = FALSE;
 			break;
 		}
 	}
 
-	if(player->left||hTempMove<0)
+	if (this->left || hTempMove<0)
 	{
-		player->speedX = -0.2f;
+		this->speedX = -0.2f;
 	}
-	else if(player->right||hTempMove>0)
+	else if (this->right || hTempMove>0)
 	{
-		player->speedX = 0.2f;
+		this->speedX = 0.2f;
 	}
 	else
 	{
-		player->speedX = 0.0f;
+		this->speedX = 0.0f;
 	}
 
-	player->base.posX+=(player->speedX * player->speedFactorX);
-	if(player->base.posX<-10.0f)
+	this->posX += (this->speedX * this->speedFactorX);
+	if (this->posX<-10.0f)
 	{
-		player->base.posX=-10.0f;
+		this->posX = -10.0f;
 	}
-	else if(player->base.posX>10.0f)
+	else if (this->posX>10.0f)
 	{
-		player->base.posX=10.0f;
+		this->posX = 10.0f;
 	}
 
-	if(player->landed)
+	if (this->landed)
 	{
 		//LoggerDebug("wwww");
-		player->speedY=0.0f;
-		if(player->jump)
+		this->speedY = 0.0f;
+		if (this->jump)
 		{
-			player->speedY+=0.8f;
+			this->speedY += 0.8f;
 		}
 	}
 	else
 	{
-		player->base.posY+=player->speedY;
-		player->speedY-=0.05f;
+		this->posY += this->speedY;
+		this->speedY -= 0.05f;
 		
 	}
 
-	if(player->base.posY<-15)
+	if (this->posY<-15)
 	{
-		if(player->speedY<0)
-			EntityPlayerLifeChange(entity,world,-1);
-		player->speedY = 1.5f;
+		if (this->speedY<0)
+			LifeChange(-1);
+		this->speedY = 1.5f;
 	}
-	else if(player->base.posY>14)
+	else if (this->posY>14)
 	{
-		if(player->speedY>=0)
-			EntityPlayerLifeChange(entity,world,-1);
-		player->speedY = -0.1f;
-		player->base.posY -= 2.5f;
+		if (this->speedY >= 0)
+			LifeChange(-1);
+		this->speedY = -0.1f;
+		this->posY -= 2.5f;
 	}
 
-	if(player->speedY<-1.0f)
+	if (this->speedY<-1.0f)
 	{
-		player->speedY=-1.0f;
+		this->speedY = -1.0f;
 	}
-	player->landed=FALSE;
+	this->landed = FALSE;
 	return 0;
 }
 
-void EntityPlayerRender(void* entity,World& world)
+void EntityPlayer::LifeChange(int value)
+{
+	this->life += value;
+	if (this->life <= 0)
+	{
+		world->state = WSTATE_GAMEOVERING;
+	}
+}
+
+void EntityPlayer::Render()
 {
 	static Texture *texture = NULL;
-	EntityPlayer *player = (EntityPlayer*)entity;
+	EntityPlayer *player = this;
 	glPushMatrix();
-	glTranslatef(player->base.posX,player->base.posY,0);
+	glTranslatef(player->posX,player->posY,0);
 	//glTranslatef(0,-10,20);
 	if(player->modelInstance==NULL)
 	{
@@ -204,119 +232,92 @@ void EntityPlayerRender(void* entity,World& world)
 	glPopMatrix();
 }
 
-void EntityPlayerDestroy(void* entity,World& world,int cause)
+void EntityPlayer::Destroy(int cause)
 {
-	EntityPlayer *player = (EntityPlayer*)entity;
-	PMD_ModelInstanceDestroy(player->modelInstance);
-	EntityDestroy(entity,world,cause);
+	PMD_ModelInstanceDestroy(this->modelInstance);
 }
 
-void EntityPlayerLifeChange( void* entity,World& world,int value )
+EntityBlock::EntityBlock(World& world, float x, float y, byte width, unsigned long depth) : Entity(world, x, y)
 {
-	EntityPlayer *player = (EntityPlayer*)entity;
-	player->life+=value;
-	if(player->life<=0)
-	{
-		world.state=WSTATE_GAMEOVERING;
-	}
+	this->texture = GetTexture();
+	this->stepped = 0;
+	this->width = width;
+	this->depthLevel = depth;
 }
 
-void EntityBlockCreate_Do(World &world,float x,float y,EntityBlock *block,va_list args,char *texture,EntityPrototype *prototype)
+Texture* EntityBlock::GetTexture()
 {
-	block->base.posX=x;
-	block->base.posY=y;
-	block->base.attributeList=LinkedListCreate();
-	block->base.prototype=prototype;
-	block->texture=RM_GetTexture(texture);
-	block->stepped=0;
-	block->width=va_arg(args, byte);
-	block->depthLevel=va_arg(args, unsigned long);
+	return RM_GetTexture("image/stone.png");
 }
 
-void* EntityBlockCreate(World &world,float x,float y, ...)
+EntityBlockBrick::EntityBlockBrick(World& world, float x, float y, byte width, unsigned long depth) :
+						EntityBlock(world, x, y, width, depth)
 {
-	va_list args;
-	EntityBlock *block = (EntityBlock*)malloc_s(sizeof(EntityBlock));
-	va_start(args,y);
-	EntityBlockCreate_Do(world,x,y,block,args,"image/stone.png",(EntityPrototype*)&entityBlockPrototype);
-	va_end(args); 
-	return block;
+	this->bounsFactor = 2.0f;
 }
 
-void* EntityBlockBrickCreate( World& world,float x,float y,... )
+Texture* EntityBlockBrick::GetTexture()
 {
-	va_list args;
-	EntityBlock *block = (EntityBlock*)malloc_s(sizeof(EntityBlockBonus));
-	va_start(args,y);
-	EntityBlockCreate_Do(world,x,y,block,args,"image/brick.png",(EntityPrototype*)&entityBlockBrickPrototype);
-	((EntityBlockBonus*)block)->bonusType=0;
-	((EntityBlockBonus*)block)->bonusInNumber=0;
-	((EntityBlockBonus*)block)->bounsInFactor=2.0f;
-	((EntityBlockBonus*)block)->bounsPointer=NULL;
-	va_end(args); 
-	return block;
+	return RM_GetTexture("image/brick.png");
 }
 
-void* EntityBlockMossyCreate( World& world,float x,float y,... )
+EntityBlockMossy::EntityBlockMossy(World& world, float x, float y, byte width, unsigned long depth) :
+						EntityBlock(world, x, y, width, depth)
 {
-	va_list args;
-	EntityBlock *block = (EntityBlock*)malloc_s(sizeof(EntityBlockBonus));
-	va_start(args,y);
-	EntityBlockCreate_Do(world,x,y,block,args,"image/mossy.png",(EntityPrototype*)&entityBlockMossyPrototype);
-	((EntityBlockBonus*)block)->bonusType=0;
-	((EntityBlockBonus*)block)->bonusInNumber=0;
-	((EntityBlockBonus*)block)->bounsInFactor=2.0f;
-	((EntityBlockBonus*)block)->bounsPointer=NULL;
-	va_end(args); 
-	return block;
+	this->slowFactor = 2.0f;
 }
 
-int EntityBlockUpdate(void* entity,World& world)
+Texture* EntityBlockMossy::GetTexture()
 {
-	EntityBlock *block = (EntityBlock*)entity;
+	return RM_GetTexture("image/mossy.png");
+}
+
+int EntityBlock::Update()
+{
+	EntityBlock *block = this;
 	float widthLeft,widthRight,temp;
-	block->base.posY+=world.upSpeed;
-	if(block->base.posY>20)
+	block->posY+=world->upSpeed;
+	if(block->posY>20)
 	{
 		return -1;
 	}
-	AttributeUpdate(world,(Entity*)entity);
+	AttributeUpdate(*world,this);
 	temp=(float)(block->width)/2;
-	widthLeft=block->base.posX-temp;
-	widthRight=block->base.posX+temp;
-	FOREACH_PLAYERS(player)
-	if(player->base.posX>(widthLeft-0.2f) && player->base.posX<(widthRight+0.2f))
+	widthLeft=block->posX-temp;
+	widthRight=block->posX+temp;
+	FOREACH_PLAYERS(player,world)
+	if(player->posX>(widthLeft-0.2f) && player->posX<(widthRight+0.2f))
 	{
 		//LoggerDebug("yaya");
-		if((player->base.posY > block->base.posY-1.0f) && (player->base.posY - block->base.posY < 0.7f) && (player->speedY<=0))
+		if((player->posY > block->posY-1.0f) && (player->posY - block->posY < 0.7f) && (player->speedY<=0))
 		{
-			EntityBlockPrototype *prototype = (EntityBlockPrototype*)block->base.prototype;
+			//EntityBlockPrototype *prototype = (EntityBlockPrototype*)block->base.prototype;
 			//LoggerDebug("yyyyy");
 			player->landed=TRUE;
-			player->base.posY = block->base.posY+0.5f;
+			player->posY = block->posY+0.5f;
 			if((unsigned long)(block->stepped&(1<<player->id))==0)//如果玩家第一次站上
 			{
-				prototype->onStep(entity,world,player,TRUE,0);
+				OnStep(*player, TRUE, 0);
 			}
 			else
 			{
-				prototype->onStep(entity,world,player,FALSE,0); //TODO:正确的站立持续时间
+				OnStep(*player, FALSE, 0);//TODO:正确的站立持续时间
 			}
 			//world->player->vSpeed=0;
 		}
-		else if(player->base.posY > block->base.posY-2.5f && (player->base.posY <= block->base.posY-0.7f))
+		else if(player->posY > block->posY-2.5f && (player->posY <= block->posY-0.7f))
 		{
 			if(player->speedY>0)
 			{
-				player->base.posY = block->base.posY-2.5f;
+				player->posY = block->posY-2.5f;
 				player->speedY=0;
 			}
 			else
 			{
-				if(player->base.posX>block->base.posX)
-					player->base.posX=widthRight+0.3f;
+				if(player->posX>block->posX)
+					player->posX=widthRight+0.3f;
 				else
-					player->base.posX=widthLeft-0.3f;
+					player->posX=widthLeft-0.3f;
 			}
 		}
 	}
@@ -324,9 +325,9 @@ int EntityBlockUpdate(void* entity,World& world)
 	return 0;
 }
 
-void EntityBlockRender(void* entity,World& world)
+void EntityBlock::Render()
 {
-	EntityBlock *block = (EntityBlock*)entity;
+	EntityBlock *block = this;
 	int width = block->width;
 	//float fWidth = (float)width/2.0f;;
 	if(width<1)
@@ -338,79 +339,72 @@ void EntityBlockRender(void* entity,World& world)
 
 	RE_BindTexture(block->texture);
 	RE_ClearMaterial();
-	glTranslatef(block->base.posX,block->base.posY,0);
+	glTranslatef(block->posX,block->posY,0);
 	RE_RenderCubeQuick(width);
 	RE_BindTexture(NULL);
 	glPopMatrix();
 }
 
-void EntityBlockOnStep( void* entity,World& world,EntityPlayer* player,BOOL first,int last )
+void EntityBlock::OnStep(EntityPlayer& player,BOOL first,int last )
 {
-	EntityBlock *block = (EntityBlock*)entity;
-	long i = block->depthLevel - player->maxDepthLevel;
+	EntityBlock *block = this;
+	long i = block->depthLevel - player.maxDepthLevel;
 	if(first==TRUE)
 	{
 		if(i>0)
 		{
-			player->score += ( i - 1 )*10;
-			player->maxDepthLevel=block->depthLevel;
+			player.score += ( i - 1 )*10;
+			player.maxDepthLevel=block->depthLevel;
 		}
 		else if(i<0)
 		{
-			player->score += -i*10;
+			player.score += -i*10;
 		}
-		player->score += 10;
-		block->stepped |= (1<<player->id);
+		player.score += 10;
+		block->stepped |= (1<<player.id);
 	}
-	GameUpdateMaxScore(player->score);
+	GameUpdateMaxScore(player.score);
 }
 
-void EntityBlockOnLeave( void* entity,World& world,EntityPlayer* player )
+void EntityBlock::OnLeave( EntityPlayer& player )
 {
 	//Do nothing
 }
 
-void EntityBlockOnStepMoreScore( void* entity,World& world,EntityPlayer* player,BOOL first,int last )
+void EntityBlockBrick::OnStep( EntityPlayer& player,BOOL first,int last )
 {
-	EntityBlockBonus* block = (EntityBlockBonus*)entity;
-	long long oldScore = player->score;
+	EntityBlockBrick* block = this;
+	long long oldScore = player.score;
 	long long delta = 0;
-	EntityBlockOnStep(entity,world,player,first,last);
-	delta = player->score - oldScore;
+	EntityBlock::OnStep(player,first,last);
+	delta = player.score - oldScore;
 	if(delta!=0)
 	{
-		player->score -= delta;
-		if(block->bonusType==0)
-		{
-			player->score += (long long)(delta*block->bounsInFactor)+block->bonusInNumber;
-		}
-		else
-		{
-			player->score += (long long)(delta+block->bonusInNumber)*block->bounsInFactor;
-		}
+		player.score -= delta;
+		player.score += (long long)(delta*bounsFactor);
 	}
-	GameUpdateMaxScore(player->score);
+	GameUpdateMaxScore(player.score);
 }
 
-void EntityBlockOnStepSlow(void* entity,World& world,EntityPlayer* player,BOOL first,int last)
+void EntityBlockMossy::OnStep(EntityPlayer& player,BOOL first,int last)
 {
-	EntityBlock* block = (EntityBlock*)entity;
-	EntityBlockOnStep(entity,world,player,first,last);
-	AttributeAddOrExtend(world,(Entity*)player,&attributeMossySlow);
+	EntityBlockMossy* block = this;
+	EntityBlock::OnStep(player, first, last);
+	AttributeAddOrExtend(*world,(Entity*)&player,&attributeMossySlow);
 }
 
-void EntityBlockOnStepBreak(void* entity,World& world,EntityPlayer* player,BOOL first,int last)
+/*void EntityBlockOnStepBreak(void* entity,World& world,EntityPlayer* player,BOOL first,int last)
 {
 	EntityBlockBonus* block = (EntityBlockBonus*)entity;
 	EntityBlockOnStep(entity,world,player,first,last);
 	if(first)
 		block->bonusInNumber = 20;
-}
+}*/
 
 
 int InitEntities()
 {
-	entityPlayerPrototype.create = EntityPlayerCreate;
+	/*entityPlayerPrototype.create = EntityPlayerCreate;
 	entityPlayerPrototype.update = EntityPlayerUpdate;
 	entityPlayerPrototype.render = EntityPlayerRender;
 	entityPlayerPrototype.destroy = EntityPlayerDestroy;
@@ -425,7 +419,7 @@ int InitEntities()
 	entityBlockBrickPrototype.onStep = EntityBlockOnStepMoreScore;
 	entityBlockMossyPrototype=entityBlockPrototype;
 	entityBlockMossyPrototype.base.create = EntityBlockMossyCreate;
-	entityBlockMossyPrototype.onStep = EntityBlockOnStepSlow;
+	entityBlockMossyPrototype.onStep = EntityBlockOnStepSlow;*/
 	//entityBlockCobblestonePrototype=entityBlockPrototype;
 	//entityBlockCobblestonePrototype.base.create=EntityBlockCobblestoneCreate;
 	LoggerInfo("Entities initialized");
