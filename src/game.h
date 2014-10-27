@@ -48,7 +48,7 @@ typedef unsigned long Hash;
 		class                           EntityBlockBrick;   //砖块实体
 
 typedef struct implTexture              Texture;            //纹理
-typedef struct implTextTexture          TextTexture;        //文字纹理
+//typedef struct implTextTexture          TextTexture;        //文字纹理
 
 typedef struct implPMD_Model            PMD_Model;          //PMD模型
 typedef struct implPMD_ModelInstance    PMD_ModelInstance;  //PMD模型实例

@@ -75,8 +75,8 @@ using namespace std;
 int RE_InitWindow(int width,int height)
 {
 	int result;
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE,8);
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,8);
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,8);
@@ -92,9 +92,9 @@ int RE_InitWindow(int width,int height)
 	//glfwMakeContextCurrent(window);
 	if(glContext==NULL)
 	{
-		GameCrash("Initialized opengl(2.1) failed.");
+		GameCrash("Initialized opengl(3.0) failed.");
 	}
-	LoggerInfo("OpenGL(2.1) initialized");
+	LoggerInfo("OpenGL(3.0) initialized");
 	SDL_GL_SetSwapInterval(1);
 	RE_Reshape(width,height);
 	if(RE_InitQuicklyRender())
@@ -695,7 +695,7 @@ GLuint loadShader(char* file, GLenum shaderType)
 	GLuint shader = glCreateShader(shaderType);
 	if (shader == 0)
 		return 0;
-	glShaderSource(shader, 0, (const GLchar**)content, NULL);
+	glShaderSource(shader, length, (const GLchar**)content, NULL);
 	glCompileShader(shader);
 	if (RE_CheckGLError(RE_STAGE_CREATING_SHADER) != GL_NO_ERROR)
 		return 0;
@@ -725,14 +725,12 @@ int RE_InitShader()
 		glAttachShader(programBackground, shaderBackgroundVert);
 		glAttachShader(programBackground, shaderBackgroundFrag);
 		glLinkProgram(programBackground);
+		programBackgroundResolution = glGetUniformLocation(programBackground, "iResolution");
+		programBackgroundGlobalTime = glGetUniformLocation(programBackground, "iGlobalTime");
+		programBackgroundChannel0 = glGetUniformLocation(programBackground, "iChannel0");
 		
 		if (RE_CheckGLError(RE_STAGE_CREATING_PROGRAM) == GL_NO_ERROR)
 		{
-			glUseProgram(programBackground);
-			programBackgroundResolution = glGetUniformLocation(programBackground, "iResolution");
-			programBackgroundGlobalTime = glGetUniformLocation(programBackground, "iGlobalTime");
-			programBackgroundChannel0 = glGetUniformLocation(programBackground, "iChannel0");
-			glUseProgram(0);
 			LoggerInfo("Background shader loaded.");
 			return 0;
 		}
