@@ -17,10 +17,37 @@ BOOL AttributeMossySlow::OnUpdate(World &world, Entity *entity)
 	if (player->posY<-14.0f)
 		return FALSE;
 	player->speedFactorX *= 0.5f;
-	//player->speedFactorY *= 0.75
 	return TRUE;
 }
 
+int AttributeMossySlow::GetDefaultLife()
+{
+	return 300;
+}
+
+BOOL AttributePowerUpSpeed::OnUpdate(World &world, Entity *entity)
+{
+	EntityPlayer* player = (EntityPlayer*)entity;
+	player->speedFactorX *= 2.0f;
+	return TRUE;
+}
+
+int AttributePowerUpSpeed::GetDefaultLife()
+{
+	return 300;
+}
+
+BOOL AttributePowerUpJump::OnUpdate(World &world, Entity *entity)
+{
+	EntityPlayer* player = (EntityPlayer*)entity;
+	player->jumpFactor *= 1.5f;
+	return TRUE;
+}
+
+int AttributePowerUpJump::GetDefaultLife()
+{
+	return 300;
+}
 
 int AttributeDestroyCallback(void *attributeInstance)
 {

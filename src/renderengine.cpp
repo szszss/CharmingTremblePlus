@@ -768,7 +768,10 @@ void RE_RenderBackground(float x, float y, float width, float height)
 	glColor4f(1.0, 1.0, 1.0, 1.0);
 	glUseProgram(programBackground);
 	glUniform3f(programBackgroundResolution, (width)*windowWidth, (height)*windowHeight, 1.0f);
-	glUniform1f(programBackgroundGlobalTime, tickTime*WINDOW_FRAME / 1000.0f);
+	if(theWorld==NULL)
+		glUniform1f(programBackgroundGlobalTime, 0);
+	else
+		glUniform1f(programBackgroundGlobalTime, theWorld->tick*WINDOW_FRAME/1000.0f);
 	glUniform1i(programBackgroundChannel0, 0);
 	glUniform4f(programBackgroundSkyColor, RE_CLEAR_COLOR);
 	//RE_DrawRectWithTexture(x, y, width, height, 0, 0, 1, 1);

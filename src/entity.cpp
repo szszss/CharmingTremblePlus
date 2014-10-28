@@ -6,6 +6,7 @@
 #include "util.h"
 #include "input.h"
 #include "attribute.h"
+#include <math.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <typeinfo>
@@ -15,6 +16,8 @@ EntityBlockPrototype entityBlockPrototype;
 EntityBlockPrototype entityBlockBrickPrototype;
 EntityBlockPrototype entityBlockMossyPrototype;
 EntityBlockPrototype entityBlockCobblestonePrototype;*/
+
+using namespace std;
 
 extern unsigned long long tickTime;
 extern World *theWorld;
@@ -51,7 +54,7 @@ Entity::~Entity()
 
 void Entity::AddAttribute(Attribute* attribute)
 {
-	Attribute *attr = GetAttribute(typeid(attribute));
+	Attribute *attr = GetAttribute(attribute);
 	if (attr != NULL)
 	{
 		*attr = *attribute;
@@ -68,6 +71,11 @@ void Entity::AddAttribute(Attribute* attribute)
 	}
 }
 
+Attribute* Entity::GetAttribute(Attribute* attrInstance)
+{
+	return GetAttribute(typeid(*attrInstance));
+}
+
 Attribute* Entity::GetAttribute(const type_info& attrClass)
 {
 	LinkedList* linkedList = attributeList;
@@ -75,7 +83,8 @@ Attribute* Entity::GetAttribute(const type_info& attrClass)
 	for (iterator = LinkedListGetIterator(linkedList); LinkedListIteratorHasNext(iterator);)
 	{
 		Attribute *attribute = (Attribute*)LinkedListIteratorGetNext(iterator);
-		if (attrClass == typeid(attribute))
+		const std::type_info &info = typeid(*attribute);
+		if (attrClass == info)
 		{
 			return attribute;
 		}
@@ -129,6 +138,7 @@ EntityPlayer::EntityPlayer(World& world, float x, float y, byte playerId) : Enti
 	this->speedY = 0;
 	this->speedFactorX = 1;
 	this->speedFactorY = 1;
+	this->jumpFactor = 1;
 	this->maxDepthLevel = 0;
 	this->left = FALSE;
 	this->right = FALSE;
@@ -144,8 +154,9 @@ int EntityPlayer::Update()
 	unsigned char operate;
 	char hTempMove = 0;
 	//恢复参数
-	this->speedFactorX=1.0f;
+	this->speedFactorX = 1.0f;
 	this->speedFactorY = 1.0f;
+	this->jumpFactor = 1.0f;
 
 	UpdateAttribute();
 
@@ -218,7 +229,7 @@ int EntityPlayer::Update()
 		this->speedY = 0.0f;
 		if (this->jump)
 		{
-			this->speedY += 0.8f;
+			this->speedY += 0.8f * jumpFactor;
 		}
 	}
 	else
@@ -236,7 +247,7 @@ int EntityPlayer::Update()
 	}
 	else if (this->posY>14)
 	{
-		if (this->speedY >= 0)
+ 		if (this->speedY >= 0 && this->GetAttribute(typeid(AttributePowerUpJump))==NULL)
 			LifeChange(-1);
 		this->speedY = -0.1f;
 		this->posY -= 2.5f;
@@ -294,37 +305,25 @@ void EntityPlayer::Destroy(int cause)
 
 EntityBlock::EntityBlock(World& world, float x, float y, byte width, unsigned long depth) : Entity(world, x, y)
 {
-	this->texture = GetTexture();
+	this->texture = RM_GetTexture("image/stone.png");
 	this->stepped = 0;
 	this->width = width;
 	this->depthLevel = depth;
 }
 
-Texture* EntityBlock::GetTexture()
-{
-	return RM_GetTexture("image/stone.png");
-}
 
 EntityBlockBrick::EntityBlockBrick(World& world, float x, float y, byte width, unsigned long depth) :
 						EntityBlock(world, x, y, width, depth)
 {
+	this->texture = RM_GetTexture("image/brick.png");
 	this->bounsFactor = 2.0f;
-}
-
-Texture* EntityBlockBrick::GetTexture()
-{
-	return RM_GetTexture("image/brick.png");
 }
 
 EntityBlockMossy::EntityBlockMossy(World& world, float x, float y, byte width, unsigned long depth) :
 						EntityBlock(world, x, y, width, depth)
 {
+	this->texture = RM_GetTexture("image/mossy.png");
 	this->slowFactor = 2.0f;
-}
-
-Texture* EntityBlockMossy::GetTexture()
-{
-	return RM_GetTexture("image/mossy.png");
 }
 
 int EntityBlock::Update()
@@ -456,6 +455,115 @@ void EntityBlockMossy::OnStep(EntityPlayer& player,BOOL first,int last)
 	if(first)
 		block->bonusInNumber = 20;
 }*/
+
+int EntityPU::Update()
+{
+	this->posY+=world->upSpeed;
+	if(this->posY>20)
+	{
+		return -1;
+	}
+	UpdateAttribute();
+	FOREACH_PLAYERS(player, world)
+		float y = player->posY + 1.0f - this->posY;
+		if(fabs(y) < 1.5f)
+		{
+			float x = player->posX - this->posX;
+			if((x*x + y*y) < (1.5f * 1.5f))
+			{
+				if(OnPick(*player))
+					return -1;
+			}
+		}
+	FOREACH_END
+	return 0;
+}
+
+void EntityPUSpeed::Render()
+{
+	static Texture* texture = NULL;
+	glPushMatrix();
+	glTranslatef(this->posX,this->posY,0);
+	if(texture==NULL)
+	{
+		texture=RM_GetTexture("image/cobblestone.png");
+	}
+	RE_BindTexture(texture);
+	RE_ClearMaterial();
+	glColor3f(1.0f,0.0f,0.0f);
+	glRotatef(world->tick,1.0f,1.0f,1.0f);
+	glEnable(GL_COLOR_MATERIAL);
+	RE_RenderCube(-0.5f, -0.5f, 0.5f, 0.5f, 0.5f, -0.5f);
+	glDisable(GL_COLOR_MATERIAL);
+	RE_BindTexture(NULL);
+	glColor4f(1.0f,1.0f,1.0f,1.0f);
+	RenderAttribute();
+	glPopMatrix();
+}
+
+BOOL EntityPUJump::OnPick(EntityPlayer& player)
+{
+	player.AddAttribute(new AttributePowerUpJump());
+	return TRUE;
+}
+
+void EntityPUJump::Render()
+{
+	static Texture* texture = NULL;
+	glPushMatrix();
+	glTranslatef(this->posX,this->posY,0);
+	if(texture==NULL)
+	{
+		texture=RM_GetTexture("image/cobblestone.png");
+	}
+	RE_BindTexture(texture);
+	RE_ClearMaterial();
+	glColor3f(0.0f,1.0f,0.0f);
+	glRotatef(world->tick,1.0f,1.0f,1.0f);
+	glEnable(GL_COLOR_MATERIAL);
+	RE_RenderCube(-0.5f, -0.5f, 0.5f, 0.5f, 0.5f, -0.5f);
+	glDisable(GL_COLOR_MATERIAL);
+	RE_BindTexture(NULL);
+	glColor4f(1.0f,1.0f,1.0f,1.0f);
+	RenderAttribute();
+	glPopMatrix();
+}
+
+BOOL EntityPUSpeed::OnPick(EntityPlayer& player)
+{
+	player.AddAttribute(new AttributePowerUpSpeed());
+	return TRUE;
+}
+
+void EntityPULife::Render()
+{
+	static Texture* texture = NULL;
+	glPushMatrix();
+	glTranslatef(this->posX,this->posY,0);
+	if(texture==NULL)
+	{
+		texture=RM_GetTexture("image/cobblestone.png");
+	}
+	RE_BindTexture(texture);
+	RE_ClearMaterial();
+	glColor3f(0.0f,0.0f,1.0f);
+	glRotatef(world->tick,1.0f,1.0f,1.0f);
+	glEnable(GL_COLOR_MATERIAL);
+	RE_RenderCube(-0.5f, -0.5f, 0.5f, 0.5f, 0.5f, -0.5f);
+	glDisable(GL_COLOR_MATERIAL);
+	RE_BindTexture(NULL);
+	glColor4f(1.0f,1.0f,1.0f,1.0f);
+	RenderAttribute();
+	glPopMatrix();
+}
+
+BOOL EntityPULife::OnPick(EntityPlayer& player)
+{
+	if(player.life>=5)
+		return FALSE;
+	player.LifeChange(1);
+	return TRUE;
+}
 
 
 int InitEntities()

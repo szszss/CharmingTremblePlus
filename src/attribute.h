@@ -25,6 +25,21 @@ class AttributeMossySlow : public Attribute
 {
 public:
 	BOOL OnUpdate(World& world, Entity* entity);
+	int GetDefaultLife();
+};
+
+class AttributePowerUpSpeed : public Attribute
+{
+public:
+	BOOL OnUpdate(World& world, Entity* entity);
+	int GetDefaultLife();
+};
+
+class AttributePowerUpJump : public Attribute
+{
+public:
+	BOOL OnUpdate(World& world, Entity* entity);
+	int GetDefaultLife();
 };
 
 int InitAttributes();

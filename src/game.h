@@ -40,12 +40,14 @@ typedef unsigned long Hash;
 
         class                           World;              //游戏世界
 		class                           Attribute;          //属性
-//typedef struct implAttributeInstance    AttributeInstance;  //属性实例
         class                           Entity;             //实体
         class                           EntityPlayer;       //玩家实体
         class                           EntityBlock;        //普通砖块实体
         class                           EntityBlockMossy;   //青苔砖实体
 		class                           EntityBlockBrick;   //砖块实体
+        class                           EntityPU;           //增益物品
+		class                           EntityPUSpeed;      //加速
+		class                           EntityPULife;       //额外一条命
 
 typedef struct implTexture              Texture;            //纹理
 //typedef struct implTextTexture          TextTexture;        //文字纹理

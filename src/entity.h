@@ -28,6 +28,7 @@ public:
 	virtual void Render() {};
 	virtual void Destroy(int cause) {};
 	virtual void AddAttribute(Attribute* attribute);
+	virtual Attribute* GetAttribute(Attribute* attrInstance);
 	virtual Attribute* GetAttribute(const type_info& attrClass);
 protected:
 	virtual void UpdateAttribute();
@@ -45,6 +46,7 @@ public:
 	float speedY;
 	float speedFactorX;
 	float speedFactorY;
+	float jumpFactor;
 	long maxDepthLevel;
 	BOOL left;
 	BOOL right;
@@ -79,8 +81,6 @@ public:
 	//void Destroy(int cause);
 	virtual void OnStep(EntityPlayer& player, BOOL first, int last);
 	virtual void OnLeave(EntityPlayer& player);
-protected:
-	virtual Texture* GetTexture();
 };
 //--------Entity--EntityBlock-EntityBlockXXX
 class EntityBlockMossy : public EntityBlock
@@ -88,18 +88,48 @@ class EntityBlockMossy : public EntityBlock
 public:
 	EntityBlockMossy(World& world, float x, float y, byte width, unsigned long depth);
 	void OnStep(EntityPlayer& player, BOOL first, int last);
-private:
+protected:
 	float slowFactor;
-	Texture* GetTexture();
 };
 class EntityBlockBrick : public EntityBlock
 {
 public:
 	EntityBlockBrick(World& world, float x, float y, byte width, unsigned long depth);
 	void OnStep(EntityPlayer& player, BOOL first, int last);
-private:
+protected:
 	float bounsFactor;
-	Texture* GetTexture();
+};
+//--------Entity--EntityPU
+class EntityPU : public Entity
+{
+public:
+	EntityPU(World& world, float x, float y) : Entity(world, x, y) {}
+	int Update();
+	virtual BOOL OnPick(EntityPlayer& player) { return FALSE; }
+};
+
+class EntityPUSpeed : public EntityPU
+{
+public:
+	EntityPUSpeed(World& world, float x, float y) : EntityPU(world, x, y) {}
+	void Render();
+	BOOL OnPick(EntityPlayer& player);
+};
+
+class EntityPUJump : public EntityPU
+{
+public:
+	EntityPUJump(World& world, float x, float y) : EntityPU(world, x, y) {}
+	void Render();
+	BOOL OnPick(EntityPlayer& player);
+};
+
+class EntityPULife : public EntityPU
+{
+public:
+	EntityPULife(World& world, float x, float y) : EntityPU(world, x, y) {}
+	void Render();
+	BOOL OnPick(EntityPlayer& player);
 };
 
 int InitEntities();

@@ -114,6 +114,7 @@ void World::Update()
 			int x = MTNextInt(randomGen,0,19);
 			int blockType = MTNextInt(randomGen,0,10);
 			byte length = (byte)MTNextInt(randomGen,4,10);
+			int hasPower = (byte)MTNextInt(randomGen,0,9);
 			EntityBlock *block = NULL;
 			depth-=5.0;
 			depthLevel++;
@@ -133,6 +134,26 @@ void World::Update()
 				break;
 			}
 			LinkedListAdd(blockList,block);
+			EntityPU *pu = NULL;
+			x = MTNextInt(randomGen,0,19);
+			switch(hasPower)
+			{
+			case 0:
+				pu = new EntityPULife(*this, (float)x - 9.5f, -19);
+				break;
+			case 1:
+			case 2:
+				pu = new EntityPUSpeed(*this, (float)x - 9.5f, -19);
+				break;
+			case 3:
+			case 4:
+				pu = new EntityPUJump(*this, (float)x - 9.5f, -19);
+				break;
+			default:
+				break;
+			}
+			if(pu!=NULL)
+				LinkedListAdd(powerupList,pu);
 			upSpeed += 0.0003f;
 		}
 		UpdateEntityList(blockList);
