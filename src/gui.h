@@ -4,38 +4,136 @@
 #include "collection.h"
 #include <wchar.h>
 
-typedef struct implGuiScreen
+class GuiScreen
 {
-	void (*update)(GuiScreen*,World*);
-	void (*render)(GuiScreen*,World*);
-	void (*close)(GuiScreen*);
+public:
 	LinkedList *controlList;
 	GuiScreen *parent;
+	virtual void Update(World* world) {};
+	virtual void Render(World* world) {};
+	virtual void Close() {};
+	void AddControl(GuiControl* control);
+protected:
+	GuiScreen() {}
 };
 
-struct implGuiButton
+class GuiControl
 {
+public:
 	int posX;
 	int posY;
 	int width;
 	int height;
-	wchar_t *text;
 	int flags;
-	int (*press)(GuiButton*,GuiScreen*,World*);
-	void (*update)(GuiButton*,GuiScreen*,World*);
+	virtual void Update(World* world) {};
+	virtual void Render(World* world) {};
+	virtual int Press(World* world) { return 0; };
+protected:
+	GuiControl(int x, int y) { posX = x; posY = y; width = 0; height = 0; flags = 0; }
 };
+
+class GuiButton : public GuiControl
+{
+public:
+	wchar_t *text;
+	void Render(World* world);
+protected:
+	GuiButton(int x, int y, int w, int h) : GuiControl(x, y)
+	{
+		width = w; height = h; this->text = L"";
+	};
+};
+
+class GuiScreenGame : public GuiScreen
+{
+public:
+	GuiScreenGame();
+	void Update(World* world);
+	void Render(World* world);
+	void Close();
+};
+
+class GuiScreenName : public GuiScreen
+{
+public:
+	GuiScreenName();
+	void Update(World* world);
+	void Render(World* world);
+	void Close();
+};
+
+class GuiButtonStart : public GuiButton
+{
+public:
+	GuiButtonStart(int x, int y, int w, int h) : GuiButton(x, y, w, h) { text = L"开始"; }
+	void Update(World* world);
+	int Press(World* world);
+};
+
+class GuiButtonPause : public GuiButton
+{
+public:
+	GuiButtonPause(int x, int y, int w, int h) : GuiButton(x, y, w, h) { text = L"暂停"; }
+	void Update(World* world);
+	int Press(World* world);
+};
+
+class GuiButtonStop : public GuiButton
+{
+public:
+	GuiButtonStop(int x, int y, int w, int h) : GuiButton(x, y, w, h) { text = L"结束"; }
+	void Update(World* world);
+	int Press(World* world);
+};
+
+class GuiButtonRestart : public GuiButton
+{
+public:
+	GuiButtonRestart(int x, int y, int w, int h) : GuiButton(x, y, w, h) { text = L"重开"; }
+	void Update(World* world);
+	int Press(World* world);
+};
+
+class GuiButtonName : public GuiButton
+{
+public:
+	GuiButtonName(int x, int y, int w, int h) : GuiButton(x, y, w, h) { text = L"玩家名"; }
+	void Update(World* world);
+	int Press(World* world);
+};
+
+class GuiButtonModel : public GuiButton
+{
+public:
+	GuiButtonModel(int x, int y, int w, int h) : GuiButton(x, y, w, h) { text = L"模型"; }
+	void Update(World* world);
+	int Press(World* world);
+};
+
+class GuiButtonEnter : public GuiButton
+{
+public:
+	GuiButtonEnter(int x, int y, int w, int h) : GuiButton(x, y, w, h) { text = L"确定"; }
+	int Press(World* world);
+};
+
+class GuiButtonCancel : public GuiButton
+{
+public:
+	GuiButtonCancel(int x, int y, int w, int h) : GuiButton(x, y, w, h) { text = L"取消"; }
+	int Press(World* world);
+};
+
 
 void Gui_Update(World* world);
 void Gui_Render(World* world);
 void Gui_Destroy();
-void Gui_Open(GuiScreen* (*constructor)());
+void Gui_Open(GuiScreen* newScreen);
 void Gui_MouseDown(long x,long y);
-GuiButton* Gui_InitButton(int x, int y, int w, int h, wchar_t* text, int flags, int(*press)(GuiButton*, GuiScreen*, World*), void(*update)(GuiButton*, GuiScreen*, World*));
-void Gui_AddButton(GuiScreen* screen,GuiButton* button);
-void Gui_RenderButton(GuiButton* button,GuiScreen* screen,World* world);
+//GuiButton* Gui_InitButton(int x, int y, int w, int h, wchar_t* text, int flags, int(*press)(GuiButton*, GuiScreen*, World*), void(*update)(GuiButton*, GuiScreen*, World*));
 BOOL Gui_Close();
 
-GuiScreen* GuiScreenGame();
+/*GuiScreen* GuiScreenGame();
 void GuiScreenGameUpdate(GuiScreen* screen,World* world);
 void GuiScreenGameRender(GuiScreen* screen,World* world);
 void GuiScreenGameClose(GuiScreen* screen);
@@ -60,4 +158,4 @@ void GuiButtonModelUpdate(GuiButton* button,GuiScreen* screen,World* world);
 int GuiButtonEnterPress(GuiButton* button,GuiScreen* screen,World* world);
 int GuiButtonCancelPress(GuiButton* button,GuiScreen* screen,World* world);
 
-void GuiButtonDummyUpdate(GuiButton* button,GuiScreen* screen,World* world);
+void GuiButtonDummyUpdate(GuiButton* button,GuiScreen* screen,World* world);*/

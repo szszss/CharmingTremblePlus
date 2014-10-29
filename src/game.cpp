@@ -67,7 +67,7 @@ void GameMainLoop()
 	LoggerInfo("Starting game main loop");
 	//theWorld = WorldNewGame("szszss",1000,TYPE_NORMAL,DIFF_NORMAL);
 	//WorldStart(theWorld);
-	Gui_Open(GuiScreenGame);
+	Gui_Open(new GuiScreenGame());
 	IN_Clear();
 	while (shouldRun)
 	{

@@ -64,8 +64,9 @@ typedef struct implPMD_Animation        PMD_Animation;      //动画
 typedef struct implPMD_KeyFrame         PMD_KeyFrame;       //动画关键帧
 typedef struct implPMD_AnimationPlayer  PMD_AnimationPlayer;//动画播放器
 
-typedef struct implGuiScreen            GuiScreen;          //界面
-typedef struct implGuiButton            GuiButton;          //按钮
+		class                           GuiScreen;          //界面
+		class                           GuiControl;         //控件
+		class                           GuiButton;          //按钮
 
 typedef struct implOSM                  OSM;                //操作状态机
 
