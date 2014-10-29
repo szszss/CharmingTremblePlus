@@ -374,12 +374,12 @@ void RE_UnloadTexture( unsigned int texture )
 int RE_CheckGLError(char* stage)
 {
 	GLenum error;
-	/*#ifndef DEBUG
+	#ifndef DEBUG
 		if(stage!=RE_STAGE_FINISH)
 		{
 			return 0;
 		}
-	#endif*/
+	#endif
 	error = glGetError();
 	if(error!=GL_NO_ERROR)
 	{

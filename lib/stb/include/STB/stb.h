@@ -1021,9 +1021,9 @@ void stb_fatal(char *s, ...)
    va_end(a);
    fputs("\n", stderr);
    #ifdef _WIN32
-   #ifdef STB_DEBUG
+   /*#ifdef STB_DEBUG
    __asm int 3;   // trap to debugger!
-   #endif
+   #endif*/
    #endif
    exit(1);
 }
@@ -1206,8 +1206,8 @@ STB_EXTERN unsigned int stb_power_of_two_nearest_prime(int n);
 STB_EXTERN float stb_smoothstep(float t);
 STB_EXTERN float stb_cubic_bezier_1d(float t, float p0, float p1, float p2, float p3);
 
-STB_EXTERN double stb_linear_remap(double x, double a, double b,
-                                             double c, double d);
+//STB_EXTERN double stb_linear_remap(double x, double a, double b,
+//                                             double c, double d);
 
 #ifdef STB_DEFINE
 float stb_smoothstep(float t)
@@ -1328,11 +1328,11 @@ unsigned int stb_power_of_two_nearest_prime(int n)
    return tab[n];
 }
 
-double stb_linear_remap(double x, double x_min, double x_max,
+/*double stb_linear_remap(double x, double x_min, double x_max,
                                   double out_min, double out_max)
 {
    return stb_lerp(stb_unlerp(x,x_min,x_max),out_min,out_max);
-}
+}*/
 #endif
 
 // create a macro so it's faster, but you can get at the function pointer
@@ -1394,7 +1394,7 @@ int stb_is_pow2(unsigned int n)
 
 // tricky use of 4-bit table to identify 5 bit positions (note the '-1')
 // 3-bit table would require another tree level; 5-bit table wouldn't save one
-#ifdef _WIN32
+/*#ifdef _WIN32
 #pragma warning(push)
 #pragma warning(disable: 4035)  // disable warning about no return value
 int stb_log2_floor(unsigned int n)
@@ -1407,7 +1407,7 @@ int stb_log2_floor(unsigned int n)
    done:;
 }
 #pragma warning(pop)
-#else
+#else*/
 int stb_log2_floor(unsigned int n)
 {
    static signed char log2_4[16] = { -1,0,1,1,2,2,2,2,3,3,3,3,3,3,3,3 };
@@ -1423,7 +1423,7 @@ int stb_log2_floor(unsigned int n)
         else if (n < (1U << 29))      return 25 + log2_4[n >> 25];
              else                     return 30 + log2_4[n >> 30];
 }
-#endif
+//#endif
 
 // define ceil from floor
 int stb_log2_ceil(unsigned int n)
@@ -5779,6 +5779,7 @@ char **stb_getopt_param(int *argc, char **argv, char *param)
 //
 //                 Portable directory reading
 //
+#if 0
 
 STB_EXTERN char **stb_readdir_files  (char *dir);
 STB_EXTERN char **stb_readdir_files_mask(char *dir, char *wild);
@@ -5788,7 +5789,7 @@ STB_EXTERN void   stb_readdir_free   (char **files);
 STB_EXTERN char **stb_readdir_recursive(char *dir, char *filespec);
 STB_EXTERN void stb_delete_directory_recursive(char *dir);
 
-#ifdef STB_DEFINE
+
 
 #ifdef _MSC_VER
 #include <io.h>
@@ -6634,7 +6635,7 @@ void stb_cfg_write_string(stb_cfg *z, char *key, char *value)
 //                      MUCH faster on NTFS, _wrong_ on FAT32, so should
 //                      ignore the db on FAT32
 
-#ifdef _WIN32
+#if 0
 
 typedef struct
 {
@@ -7332,7 +7333,7 @@ STB_EXTERN void ** stb_ps_fastlist(stb_ps *ps, int *count);
 
 #define stb_ps_fastlist_valid(x)   ((unsigned int) (x) > 1)
 
-#ifdef STB_DEFINE
+#if 0
 
 enum
 {

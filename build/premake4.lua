@@ -5,6 +5,7 @@ configuration "Release"
 	flags { "Optimize", "EnableSSE", "Unicode"}
 configuration "Debug"
 	flags { "Symbols", "NoEditAndContinue" ,"Unicode"}
+	defines { "DEBUG"}
 configuration{}
 
 if os.is("Linux") then
@@ -63,4 +64,4 @@ include "../src/"
 --include "../lib/glfw/"
 include "../lib/sdl/"
 include "../lib/stb/"
-include "../lib/tbox/"
+--include "../lib/tbox/"

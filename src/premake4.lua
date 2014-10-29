@@ -7,26 +7,45 @@ configuration "Debug"
 configuration {}
 local suf
 configuration {"x32"}
-	suf = "_x86"
+	targetdir ("../bin/install_x86")
+	debugdir ("../bin/install_x86")
 configuration "x64"		
-	suf = "_x64"
+	targetdir ("../bin/install_x64")
+	debugdir ("../bin/install_x64")
 configuration {"x64", "debug"}
-	suf = "_x64_debug"
+	targetdir ("../bin/install_x64_debug")
+	debugdir ("../bin/install_x64_debug")
 configuration {"x64", "release"}
-	suf = "_x64_release" 
+	targetdir ("../bin/install_x64_release")
+	debugdir ("../bin/install_x64_release")
 configuration {"x32", "debug"}
-	suf = "_x86_debug"
+	targetdir ("../bin/install_x86_debug")
+	debugdir ("../bin/install_x86_debug")
 configuration{}
-targetdir ("../bin/install" .. suf)
-debugdir ("../bin/install" .. suf)
+configuration {"x32", "Windows"}
+	postbuildcommands { "xcopy /e /y \"$(ProjectDir)..\\..\\assets\" \"$(ProjectDir)..\\..\\bin\\install_x86\"",
+						"del /q \"$(ProjectDir)..\\..\\bin\\install_x86\\.git\"" }
+configuration {"x64", "Windows"}		
+	postbuildcommands { "xcopy /e /y \"$(ProjectDir)..\\..\\assets\" \"$(ProjectDir)..\\..\\bin\\install_x64\"",
+						"del /q \"$(ProjectDir)..\\..\\bin\\install_x64\\.git\"" }
+configuration {"x64", "debug", "Windows"}
+	postbuildcommands { "xcopy /e /y \"$(ProjectDir)..\\..\\assets\" \"$(ProjectDir)..\\..\\bin\\install_x64_debug\"",
+						"del /q \"$(ProjectDir)..\\..\\bin\\install_x64_debug\\.git\"" }
+configuration {"x64", "release", "Windows"}
+	postbuildcommands { "xcopy /e /y \"$(ProjectDir)..\\..\\assets\" \"$(ProjectDir)..\\..\\bin\\install_x64_release\"",
+						"del /q \"$(ProjectDir)..\\..\\bin\\install_x64_release\\.git\"" }
+configuration {"x32", "debug", "Windows"}
+	postbuildcommands { "xcopy /e /y \"$(ProjectDir)..\\..\\assets\" \"$(ProjectDir)..\\..\\bin\\install_x86_debug\"",
+						"del /q \"$(ProjectDir)..\\..\\bin\\install_x86_debug\\.git\"" }
+configuration{}
 targetname "CharmingTremblePlus"
 targetsuffix ""
-links {"SDL","STB","TBox"}
+links {"SDL","STB"}
 includedirs {
-	"../lib/glfw/include/",
+	--"../lib/glfw/include/",
 	"../lib/sdl/include/",
-	"../lib/stb/include/",
-	"../lib/tbox/src/"
+	"../lib/stb/include/"
+	--"../lib/tbox/src/"
 }
 files {
 	"*.c",
@@ -41,12 +60,6 @@ vpaths {
 
 configuration {"Windows"}
 	defines { "_CRT_SECURE_NO_WARNINGS","_CRT_SECURE_NO_DEPRECATE"}
-	--prebuildcommands  {"del /s /q \"$(ProjectDir)..\\..\\bin\\install" .. suf .."\""}
-	postbuildcommands { "xcopy /e /y \"$(ProjectDir)..\\..\\assets\" \"$(ProjectDir)..\\..\\bin\\install" .. suf .."\"",
-						"del /q \"$(ProjectDir)..\\..\\bin\\install" .. suf .."\\.git\""
-						--" move /y     \"..\\..\\bin\\Game" .. suf .."\" \"..\\..\\bin\\install" .. suf .. "\\CharmingTremblePlus.exe\" ",
-						--" move /y     \"..\\..\\bin\\SDL" .. suf .."\"  \"..\\..\\bin\\install" .. suf .. "\\\" "
-						}
 configuration {"not Windows"}
 	--TODO:postbuildcommands
 configuration{}

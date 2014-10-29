@@ -4,17 +4,25 @@ kind "SharedLib"
 local suf
 configuration {"x32"}
 	suf = "_x86"
+	targetdir ("../../bin/install" .. suf)
+	targetname ("sdl" .. suf)
 configuration "x64"		
 	suf = "_x64"
+	targetdir ("../../bin/install" .. suf)
+	targetname ("sdl" .. suf)
 configuration {"x64", "debug"}
 	suf = "_x64_debug"
+	targetdir ("../../bin/install" .. suf)
+	targetname ("sdl" .. suf)
 configuration {"x64", "release"}
 	suf = "_x64_release" 
+	targetdir ("../../bin/install" .. suf)
+	targetname ("sdl" .. suf)
 configuration {"x32", "debug"}
 	suf = "_x86_debug"
+	targetdir ("../../bin/install" .. suf)
+	targetname ("sdl" .. suf)
 configuration{}
-targetdir ("../../bin/install" .. suf)
-targetname ("sdl" .. suf)
 targetsuffix ""
 objdir "../../bin/obj"
 includedirs {

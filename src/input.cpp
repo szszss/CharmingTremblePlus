@@ -1,6 +1,5 @@
 ﻿#include "input.h"
 #include "gui.h"
-#include "tbox/charset/charset.h"
 #include <string.h>
 
 OSM mainOSM;
